@@ -9,6 +9,7 @@ ffmpeg_concat_ftd() {
     cat filesdelete.txt | xargs -I {} mv {} "$folder split files"
     rm files.txt
     rm filesdelete.txt
+	HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30"
 }
 
 ffmpeg_concat_delete_files() {
