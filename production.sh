@@ -3,18 +3,29 @@ set -e
 
 ffmpeg_concat_ftd() {
     folder="${PWD##*/}"
-    for f in `find . -iname "*.MP4" -type f -size -4020M`; do echo "file '$f'" >> files.txt | echo "'$f'" >> filesdelete.txt; done
+    # for f in $(find . -iname "*.MP4" -type f -size -4020M); do echo "file '$f'" >> files.txt | echo "'$f'" >> filesdelete.txt; done
+    find . -iname "*.MP4" -type f -size -4020M -print0 | while IFS= read -r -d '' f;
+    do
+    echo "file '$f'" >> files.txt;
+    echo "'$f'" >> filesdelete.txt;
+    done
     ffmpeg -f concat -safe 0 -i files.txt -c copy "${folder}".MP4
     mkdir "$folder split files"
-    cat filesdelete.txt | xargs -I {} mv {} "$folder split files"
+    # cat filesdelete.txt | xargs -I {} mv {} "$folder split files"
+    < filesdelete.txt xargs -I {} mv {} "$folder split files"
     rm files.txt
     rm filesdelete.txt
-	HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30"
+	  HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30"
 }
 
 ffmpeg_concat_delete_files() {
 	folder="${PWD##*/}"
-	for f in `find . -iname "*.MP4" -type f -size -4020M`; do echo "file '$f'" >> files.txt | echo "'$f'" >> filesdelete.txt; done
+	# for f in $(find . -iname "*.MP4" -type f -size -4020M); do echo "file '$f'" >> files.txt | echo "'$f'" >> filesdelete.txt; done
+  find . -iname "*.MP4" -type f -size -4020M -print0 | while IFS= read -r -d '' f;
+  do
+  echo "file '$f'" >> files.txt;
+  echo "'$f'" >> filesdelete.txt;
+  done
 	ffmpeg -f concat -safe 0 -i files.txt -c copy "${folder}".MP4
 	xargs -I{} rm -r "{}" < filesdelete.txt
 	rm files.txt
@@ -22,7 +33,7 @@ ffmpeg_concat_delete_files() {
 }
 
 move_split_files() {
-    cd $root
+    cd "$root"
     mkdir "files to delete"
     find . -type d -name "*split files" -exec mv '{}' "$( realpath 'files to delete')" \;
 }
@@ -33,11 +44,11 @@ main_ftd() {
 
     array=( $(find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';') )
 
-    for i in ${array[@]}
+    for i in "${array[@]}"
     do
-        cd $( realpath "$i" )
+        cd "$( realpath "$i" )"
         ffmpeg_concat_ftd
-        
+
     done
 
     move_split_files
@@ -51,12 +62,12 @@ main_delete_files() {
 
 	array=( $(find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';') )
 
-	for i in ${array[@]}
+	for i in "${array[@]}"
 	do
-		cd $( realpath "$i" )
+		cd "$( realpath "$i" )"
 		ffmpeg_concat_delete_files
-		
-	done	
+
+	done
 }
 
 check() {
@@ -64,7 +75,7 @@ check() {
 
 	read -p "Do you want to proceed in folder -- ${PWD##*/}? (y/n) " yn
 
-	case $yn in 
+	case $yn in
 		[yY] ) echo confirmed;
 			break;;
 		[nN] ) echo exiting...;
@@ -77,31 +88,31 @@ check() {
 	echo Starting FFMPEG
 cat << "EOF"
 
-:::::::::  :::::::::   ::::::::  :::       ::: ::::    ::: 
-:+:    :+: :+:    :+: :+:    :+: :+:       :+: :+:+:   :+: 
-+:+    +:+ +:+    +:+ +:+    +:+ +:+       +:+ :+:+:+  +:+ 
-+#++:++#+  +#++:++#:  +#+    +:+ +#+  +:+  +#+ +#+ +:+ +#+ 
-+#+    +#+ +#+    +#+ +#+    +#+ +#+ +#+#+ +#+ +#+  +#+#+# 
-#+#    #+# #+#    #+# #+#    #+#  #+#+# #+#+#  #+#   #+#+# 
-#########  ###    ###  ########    ###   ###   ###    #### 
-::::    ::::  :::::::::: ::::    ::: :::  ::::::::  
-+:+:+: :+:+:+ :+:        :+:+:   :+: :+  :+:    :+: 
-+:+ +:+:+ +:+ +:+        :+:+:+  +:+     +:+        
-+#+  +:+  +#+ +#++:++#   +#+ +:+ +#+     +#++:++#++ 
-+#+       +#+ +#+        +#+  +#+#+#            +#+ 
-#+#       #+# #+#        #+#   #+#+#     #+#    #+# 
-###       ### ########## ###    ####      ########  
-::::::::::: :::::::::: ::::    ::: ::::    ::: :::::::::::  ::::::::  
-    :+:     :+:        :+:+:   :+: :+:+:   :+:     :+:     :+:    :+: 
-    +:+     +:+        :+:+:+  +:+ :+:+:+  +:+     +:+     +:+        
-    +#+     +#++:++#   +#+ +:+ +#+ +#+ +:+ +#+     +#+     +#++:++#++ 
-    +#+     +#+        +#+  +#+#+# +#+  +#+#+#     +#+            +#+ 
-    #+#     #+#        #+#   #+#+# #+#   #+#+#     #+#     #+#    #+# 
-    ###     ########## ###    #### ###    #### ###########  ########  
+:::::::::  :::::::::   ::::::::  :::       ::: ::::    :::
+:+:    :+: :+:    :+: :+:    :+: :+:       :+: :+:+:   :+:
++:+    +:+ +:+    +:+ +:+    +:+ +:+       +:+ :+:+:+  +:+
++#++:++#+  +#++:++#:  +#+    +:+ +#+  +:+  +#+ +#+ +:+ +#+
++#+    +#+ +#+    +#+ +#+    +#+ +#+ +#+#+ +#+ +#+  +#+#+#
+#+#    #+# #+#    #+# #+#    #+#  #+#+# #+#+#  #+#   #+#+#
+#########  ###    ###  ########    ###   ###   ###    ####
+::::    ::::  :::::::::: ::::    ::: :::  ::::::::
++:+:+: :+:+:+ :+:        :+:+:   :+: :+  :+:    :+:
++:+ +:+:+ +:+ +:+        :+:+:+  +:+     +:+
++#+  +:+  +#+ +#++:++#   +#+ +:+ +#+     +#++:++#++
++#+       +#+ +#+        +#+  +#+#+#            +#+
+#+#       #+# #+#        #+#   #+#+#     #+#    #+#
+###       ### ########## ###    ####      ########
+::::::::::: :::::::::: ::::    ::: ::::    ::: :::::::::::  ::::::::
+    :+:     :+:        :+:+:   :+: :+:+:   :+:     :+:     :+:    :+:
+    +:+     +:+        :+:+:+  +:+ :+:+:+  +:+     +:+     +:+
+    +#+     +#++:++#   +#+ +:+ +#+ +#+ +:+ +#+     +#+     +#++:++#++
+    +#+     +#+        +#+  +#+#+# +#+  +#+#+#     +#+            +#+
+    #+#     #+#        #+#   #+#+# #+#   #+#+#     #+#     #+#    #+#
+    ###     ########## ###    #### ###    #### ###########  ########
 
 
 EOF
- 
+
 	sleep 3
 }
 
@@ -110,7 +121,7 @@ check_delete(){
 
 	read -p "Are you sure you want to delete the leftover files? (y/n) " yn
 
-	case $yn in 
+	case $yn in
 		[yY] ) echo confirmed;
 			break;;
 		[nN] ) echo exiting...;
@@ -134,7 +145,7 @@ then
 		main_delete_files
 	elif [[ ! -d $1 ]];
 	then
-		echo -$1- is not a valid directory;
+		echo -"$1"- is not a valid directory;
 		exit
 	else
 		cd "$1"
@@ -145,11 +156,11 @@ elif [[ -n $1 && -n $2 && -z $3 ]];
 then
 	if [[ ! -d $1 ]];
 	then
-		echo -$1- is not a valid directory;
+		echo -"$1"- is not a valid directory;
 		exit
 	elif [[ $2 != delete ]];
 	then
-		echo argument -$2- not valid
+		echo argument -"$2"- not valid
 	else
 		cd "$1"
 		check_delete
@@ -160,6 +171,3 @@ then
 else
 echo Too many arguments entered
 fi
-
- 
-
