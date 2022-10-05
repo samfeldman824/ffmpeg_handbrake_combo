@@ -15,7 +15,7 @@ ffmpeg_concat_ftd() {
     < filesdelete.txt xargs -I {} mv {} "$folder split files"
     rm files.txt
     rm filesdelete.txt
-	  HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30"
+
 }
 
 ffmpeg_concat_delete_files() {
@@ -42,12 +42,19 @@ main_ftd() {
 	IFS=$'\n';
     root="$PWD";
 
-    array=( $(find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';') )
+    array=()
+    while IFS='' read -r line; do array+=("$line"); done < <(find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';')
+
+    # array=( $(find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';') )
+    # array=()
+    # find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';' | while IFS="" read -r line; do array+=("$line"); done
+
 
     for i in "${array[@]}"
     do
         cd "$( realpath "$i" )"
         ffmpeg_concat_ftd
+        # HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30"
 
     done
 
@@ -60,7 +67,8 @@ main_delete_files() {
 	IFS=$'\n'
 	root="$PWD";
 
-	array=( $(find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';') )
+  array=()
+  while IFS='' read -r line; do array+=("$line"); done < <(find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';')
 
 	for i in "${array[@]}"
 	do
