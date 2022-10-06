@@ -6,15 +6,15 @@ ffmpeg_concat_ftd() {
     # for f in $(find . -iname "*.MP4" -type f -size -4020M); do echo "file '$f'" >> files.txt | echo "'$f'" >> filesdelete.txt; done
     find . -iname "*.MP4" -type f -size -4020M -print0 | while IFS= read -r -d '' f;
     do
-    echo "file '$f'" >> files.txt;
-    echo "'$f'" >> filesdelete.txt;
+    echo "file '$f'" >> filestmp.txt | sort filestmp.txt > files.txt;
+    echo "'$f'" >> filesdeletetmp.txt | sort filesdeletetmp.txt > filesdelete.txt;
     done
+    rm filestmp.txt filesdeletetmp.txt
     ffmpeg -f concat -safe 0 -i files.txt -c copy "${folder}".MP4
     mkdir "$folder split files"
     # cat filesdelete.txt | xargs -I {} mv {} "$folder split files"
     < filesdelete.txt xargs -I {} mv {} "$folder split files"
-    rm files.txt
-    rm filesdelete.txt
+    rm files.txt filesdelete.txt
 
 }
 
@@ -23,13 +23,13 @@ ffmpeg_concat_delete_files() {
 	# for f in $(find . -iname "*.MP4" -type f -size -4020M); do echo "file '$f'" >> files.txt | echo "'$f'" >> filesdelete.txt; done
   find . -iname "*.MP4" -type f -size -4020M -print0 | while IFS= read -r -d '' f;
   do
-  echo "file '$f'" >> files.txt;
-  echo "'$f'" >> filesdelete.txt;
+  echo "file '$f'" >> filestmp.txt | sort filestmp.txt > files.txt;
+  echo "'$f'" >> filesdeletetmp.txt | sort filesdeletetmp.txt > filesdelete.txt;
   done
+  rm filestmp.txt filesdeletetmp.txt
 	ffmpeg -f concat -safe 0 -i files.txt -c copy "${folder}".MP4
 	xargs -I{} rm -r "{}" < filesdelete.txt
-	rm files.txt
-	rm filesdelete.txt
+	rm files.txt filesdelete.txt
 }
 
 move_split_files() {
@@ -67,7 +67,7 @@ main_ftd() {
 
     done
 
-    # move_split_files
+    move_split_files
 
 }
 
