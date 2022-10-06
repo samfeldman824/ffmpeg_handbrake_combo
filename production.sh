@@ -159,6 +159,54 @@ check_delete(){
 	done
 }
 
+
+while getopts "f:d::c::" opt; do
+  DELETE=0;
+  COMPRESS=0;
+case $opt in
+  f)
+  DIR=${OPTARG}
+  ;;
+  d)
+  DELETE=1
+  ;;
+  c)
+  COMPRESS=1
+  ;;
+  *)
+  echo "Invalid arguments"
+  ;;
+esac
+done
+
+if [ -n "$DIR" ]; then
+    cd "$DIR"
+fi
+
+if [ "$DELETE" == 1 ]; then
+    check_delete
+    check
+    main_delete_files
+  else
+    check
+    main_ftd
+fi
+
+if [ "$COMPRESS" == 1 ]; then
+    HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30"
+fi
+
+
+
+
+
+
+
+
+
+
+
+previous() {
 if [[ -z $1 ]];
 then
 	check
@@ -198,3 +246,4 @@ then
 else
 echo Too many arguments entered
 fi
+}
