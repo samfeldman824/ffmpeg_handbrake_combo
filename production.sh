@@ -100,7 +100,7 @@ main_delete_files() {
 check() {
 	while true; do
 
-	read -p "Do you want to proceed in folder -- ${PWD##*/}? (y/n) " yn
+	read -r -p "Do you want to proceed in folder -- ${PWD##*/}? (y/n) " yn
 
 	case $yn in
 		[yY] ) echo confirmed;
@@ -146,7 +146,7 @@ EOF
 check_delete(){
 	while true; do
 
-	read -p "Are you sure you want to delete the leftover files? (y/n) " yn
+	read -r -p "Are you sure you want to delete the leftover files? (y/n) " yn
 
 	case $yn in
 		[yY] ) echo confirmed;
