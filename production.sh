@@ -6,8 +6,10 @@ ffmpeg_concat_ftd() {
     # for f in $(find . -iname "*.MP4" -type f -size -4020M); do echo "file '$f'" >> files.txt | echo "'$f'" >> filesdelete.txt; done
     find . -iname "*.MP4" -type f -size -4020M -print0 | while IFS= read -r -d '' f;
     do
-    echo "file '$f'" >> filestmp.txt | sort filestmp.txt > files.txt;
-    echo "'$f'" >> filesdeletetmp.txt | sort filesdeletetmp.txt > filesdelete.txt;
+    echo "file '$f'" >> filestmp.txt;
+    sort filestmp.txt > files.txt;
+    echo "'$f'" >> filesdeletetmp.txt;
+    sort filesdeletetmp.txt > filesdelete.txt;
     done
     rm filestmp.txt filesdeletetmp.txt
     ffmpeg -f concat -safe 0 -i files.txt -c copy "${folder}".MP4
@@ -23,8 +25,10 @@ ffmpeg_concat_delete_files() {
 	# for f in $(find . -iname "*.MP4" -type f -size -4020M); do echo "file '$f'" >> files.txt | echo "'$f'" >> filesdelete.txt; done
   find . -iname "*.MP4" -type f -size -4020M -print0 | while IFS= read -r -d '' f;
   do
-  echo "file '$f'" >> filestmp.txt | sort filestmp.txt > files.txt;
-  echo "'$f'" >> filesdeletetmp.txt | sort filesdeletetmp.txt > filesdelete.txt;
+  echo "file '$f'" >> filestmp.txt;
+  sort filestmp.txt > files.txt;
+  echo "'$f'" >> filesdeletetmp.txt;
+  sort filesdeletetmp.txt > filesdelete.txt;
   done
   rm filestmp.txt filesdeletetmp.txt
 	ffmpeg -f concat -safe 0 -i files.txt -c copy "${folder}".MP4
@@ -52,7 +56,13 @@ main_ftd() {
     root="$PWD";
 
     array=()
-    while IFS='' read -r line; do array+=("$line"); done < <(find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';')
+    # while IFS='' read -r line; do array+=("$line"); done < <(find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';')
+    while IFS='' read -r line; do array+=("$line"); done < <(find "$root" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
+
+    # find root -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print
+  #   find . -type d \
+  # \( -exec sh -c 'find "$1" -mindepth 1 -maxdepth 1 -type d -print0 | grep -cz "^" >/dev/null 2>&1' _ {} \; -o -print \)
+
 
     # array=( $(find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';') )
     # array=()
@@ -77,7 +87,7 @@ main_delete_files() {
 	root="$PWD";
 
   array=()
-  while IFS='' read -r line; do array+=("$line"); done < <(find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';')
+  while IFS='' read -r line; do array+=("$line"); done < <(find "$root" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
 
 	for i in "${array[@]}"
 	do
