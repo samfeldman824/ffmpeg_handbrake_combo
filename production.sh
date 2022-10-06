@@ -35,7 +35,16 @@ ffmpeg_concat_delete_files() {
 move_split_files() {
     cd "$root"
     mkdir "files to delete"
-    find . -type d -name "*split files" -exec mv '{}' "$( realpath 'files to delete')" \;
+    # find . -type d -name "*split files" -exec mv '{}' "$( realpath 'files to delete')" \;
+    array=()
+    while IFS=  read -r -d $'\0'; do
+    array+=("$REPLY")
+    done < <(find . -type d -name "*split files" -print0)
+    for i in "${array[@]}"
+    do
+    mv "$( realpath "$i" )" "$( realpath 'files to delete')"
+    done
+
 }
 
 main_ftd() {
@@ -58,7 +67,7 @@ main_ftd() {
 
     done
 
-    move_split_files
+    # move_split_files
 
 }
 
