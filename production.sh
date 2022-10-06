@@ -161,8 +161,6 @@ check_delete(){
 
 
 while getopts "f:d::c::" opt; do
-  DELETE=0;
-  COMPRESS=0;
 case $opt in
   f)
   DIR=${OPTARG}
