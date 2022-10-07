@@ -105,12 +105,12 @@ compression() {
   # declare -p compression_array
   for i in "${compression_array[@]}"
   do
-      echo $i
+      # echo $i
       if [[ $i != *"files to delete"* ]]; then
-      # cd "$( realpath "$i" )"
-      # folder="${PWD##*/}"
-      # HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30"
-      echo $i
+      cd "$( realpath "$i" )"
+      folder="${PWD##*/}"
+      HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30"
+      # echo $i
       fi
   done
 }
@@ -187,8 +187,11 @@ case $opt in
 esac
 done
 
+STARTDIR="$PWD";
+
 if [ -n "$DIR" ]; then
     cd "$DIR"
+    STARTDIR=$DIR
 fi
 
 if [ "$DELETE" == 1 ]; then
@@ -201,6 +204,7 @@ if [ "$DELETE" == 1 ]; then
 fi
 
 if [ "$COMPRESS" == 1 ]; then
+      cd $STARTDIR
       compression
 fi
 
