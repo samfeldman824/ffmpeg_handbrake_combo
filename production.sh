@@ -204,7 +204,7 @@ if [ "$DELETE" == 1 ]; then
 fi
 
 if [ "$COMPRESS" == 1 ]; then
-      cd $STARTDIR
+      cd "$STARTDIR"
       compression
 fi
 
