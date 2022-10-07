@@ -178,11 +178,18 @@ check_delete(){
 }
 
 
-while getopts ":f:cd" opt; do
+while getopts ":f:cdh" opt; do
 case $opt in
   f) DIR=${OPTARG} ;;
   d) DELETE=1 ;;
   c) COMPRESS=1 ;;
+  h) echo "Options:
+          -h       Print help
+          -d       Delete leftover files
+          -c       Compress concatenated files
+          -f       Run script in specified directory"
+
+  ;;
   *) echo "Invalid arguments" ;;
 esac
 done
