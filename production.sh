@@ -52,7 +52,7 @@ move_split_files() {
 }
 
 main_ftd() {
-	IFS=$'\n';
+	  IFS=$'\n';
     root="$PWD";
 
     array=()
@@ -95,6 +95,24 @@ main_delete_files() {
 		ffmpeg_concat_delete_files
 
 	done
+}
+
+compression() {
+  IFS=$'\n';
+  root="$PWD";
+  compression_array=()
+  while IFS='' read -r line; do compression_array+=("$line"); done < <(find "$root" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
+  # declare -p compression_array
+  for i in "${compression_array[@]}"
+  do
+      echo $i
+      if [[ $i != *"files to delete"* ]]; then
+      # cd "$( realpath "$i" )"
+      # folder="${PWD##*/}"
+      # HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30"
+      echo $i
+      fi
+  done
 }
 
 check() {
@@ -160,20 +178,12 @@ check_delete(){
 }
 
 
-while getopts "f:d::c::" opt; do
+while getopts ":f:cd" opt; do
 case $opt in
-  f)
-  DIR=${OPTARG}
-  ;;
-  d)
-  DELETE=1
-  ;;
-  c)
-  COMPRESS=1
-  ;;
-  *)
-  echo "Invalid arguments"
-  ;;
+  f) DIR=${OPTARG} ;;
+  d) DELETE=1 ;;
+  c) COMPRESS=1 ;;
+  *) echo "Invalid arguments" ;;
 esac
 done
 
@@ -191,7 +201,7 @@ if [ "$DELETE" == 1 ]; then
 fi
 
 if [ "$COMPRESS" == 1 ]; then
-    HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30"
+      compression
 fi
 
 
