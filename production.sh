@@ -54,27 +54,12 @@ move_split_files() {
 main_ftd() {
 	  IFS=$'\n';
     root="$PWD";
-
     array=()
-    # while IFS='' read -r line; do array+=("$line"); done < <(find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';')
     while IFS='' read -r line; do array+=("$line"); done < <(find "$root" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
-
-    # find root -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print
-  #   find . -type d \
-  # \( -exec sh -c 'find "$1" -mindepth 1 -maxdepth 1 -type d -print0 | grep -cz "^" >/dev/null 2>&1' _ {} \; -o -print \)
-
-
-    # array=( $(find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';') )
-    # array=()
-    # find . -type d -execdir sh -c 'test -z "$(find "{}" -mindepth 1 -type d)" && echo $PWD/{}' ';' | while IFS="" read -r line; do array+=("$line"); done
-
-
     for i in "${array[@]}"
     do
         cd "$( realpath "$i" )"
         ffmpeg_concat_ftd
-        # HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30"
-
     done
 
     move_split_files
@@ -82,18 +67,14 @@ main_ftd() {
 }
 
 main_delete_files() {
-
 	IFS=$'\n'
 	root="$PWD";
-
   array=()
   while IFS='' read -r line; do array+=("$line"); done < <(find "$root" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
-
 	for i in "${array[@]}"
 	do
 		cd "$( realpath "$i" )"
 		ffmpeg_concat_delete_files
-
 	done
 }
 
@@ -102,15 +83,13 @@ compression() {
   root="$PWD";
   compression_array=()
   while IFS='' read -r line; do compression_array+=("$line"); done < <(find "$root" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
-  # declare -p compression_array
   for i in "${compression_array[@]}"
   do
-      # echo $i
       if [[ $i != *"files to delete"* ]]; then
       cd "$( realpath "$i" )"
       folder="${PWD##*/}"
       HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30"
-      # echo $i
+      # HandBrakeCLI -i "${folder}".MP4 --preset-import-file [PATH to JSON] -o "${folder}".MP4
       fi
   done
 }
@@ -214,55 +193,3 @@ if [ "$COMPRESS" == 1 ]; then
       cd "$STARTDIR"
       compression
 fi
-
-
-
-
-
-
-
-
-
-
-
-previous() {
-if [[ -z $1 ]];
-then
-	check
-    main_ftd
-elif [[ -n $1 && -z $2 ]];
-then
-	if [[ $1 == delete ]];
-	then
-		check_delete
-		check
-		main_delete_files
-	elif [[ ! -d $1 ]];
-	then
-		echo -"$1"- is not a valid directory;
-		exit
-	else
-		cd "$1"
-		check
-		main_ftd
-	fi
-elif [[ -n $1 && -n $2 && -z $3 ]];
-then
-	if [[ ! -d $1 ]];
-	then
-		echo -"$1"- is not a valid directory;
-		exit
-	elif [[ $2 != delete ]];
-	then
-		echo argument -"$2"- not valid
-	else
-		cd "$1"
-		check_delete
-		check
-		main_delete_files
-	fi
-
-else
-echo Too many arguments entered
-fi
-}
