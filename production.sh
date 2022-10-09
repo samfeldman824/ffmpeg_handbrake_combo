@@ -162,7 +162,8 @@ case $opt in
   f) DIR=${OPTARG} ;;
   d) DELETE=1 ;;
   c) COMPRESS=1 ;;
-  h) echo "Options:
+  h) HELP=1
+    echo "Options:
           -h       Print help
           -d       Delete leftover files
           -c       Compress concatenated files
@@ -174,6 +175,10 @@ esac
 done
 
 STARTDIR="$PWD";
+
+if [ "$HELP" == 1 ]; then
+  exit
+fi
 
 if [ -n "$DIR" ]; then
     cd "$DIR"
