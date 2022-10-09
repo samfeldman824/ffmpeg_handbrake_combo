@@ -88,8 +88,8 @@ compression() {
       if [[ $i != *"files to delete"* ]]; then
       cd "$( realpath "$i" )"
       folder="${PWD##*/}"
-      HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30"
-      # HandBrakeCLI -i "${folder}".MP4 --preset-import-file [PATH to JSON] -o "${folder}".MP4
+      HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30" -r 60.0 -q 22.0
+      # HandBrakeCLI -i "${folder}".MP4 --preset-import-file [PATH to JSON] -o "${folder} (compressed)".MP4
       fi
   done
 }
