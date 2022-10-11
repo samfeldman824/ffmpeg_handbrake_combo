@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-ffmpeg_concat_ftd() {
+ffmpeg_concat() {
     folder="${PWD##*/}"
     find . -iname "*.MP4" -type f -size -4020M -print0 | while IFS= read -r -d '' f;
     do
@@ -12,9 +12,17 @@ ffmpeg_concat_ftd() {
     done
     rm filestmp.txt filesdeletetmp.txt
     ffmpeg -f concat -safe 0 -i files.txt -c copy "${folder}".MP4
+
+    if [ "$DELETE" == 0 ]; then
     mkdir "$folder split files"
     < filesdelete.txt xargs -I {} mv {} "$folder split files"
     rm files.txt filesdelete.txt
+    fi
+
+    if [ "$DELETE" == 1 ]; then
+    xargs -I{} rm -r "{}" < filesdelete.txt
+    rm files.txt filesdelete.txt
+    fi
 
 }
 
@@ -47,18 +55,26 @@ move_split_files() {
 
 }
 
-main_ftd() {
+main() {
 	  IFS=$'\n';
     root="$PWD";
+
     array=()
     while IFS='' read -r line; do array+=("$line"); done < <(find "$root" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
     for i in "${array[@]}"
     do
         cd "$( realpath "$i" )"
-        ffmpeg_concat_ftd
+        ffmpeg_concat
     done
 
+    if [ "$DELETE" == 0 ]; then
     move_split_files
+    fi
+
+    if [ "$COMPRESS" == 1 ]; then
+          cd "$STARTDIR"
+          compression
+    fi
 
 }
 
@@ -98,6 +114,40 @@ compression() {
 }
 
 check() {
+
+  if [ "$DELETE" == 1 ]; then
+    while true; do
+
+  	read -r -p "Are you sure you want to delete the leftover files? (y/n) " yn
+
+  	case $yn in
+  		[yY] ) echo confirmed;
+  			break;;
+  		[nN] ) echo exiting...;
+  			exit;;
+  		* ) echo invalid response;;
+  	esac
+
+  	done
+  fi
+
+  if [ "$COMPRESS" == 1 ]; then
+    while true; do
+
+  	read -r -p "Are you sure you want to compress all concatenated files? (y/n) " yn
+
+  	case $yn in
+  		[yY] ) echo confirmed;
+  			break;;
+  		[nN] ) echo exiting...;
+  			exit;;
+  		* ) echo invalid response;;
+  	esac
+
+  	done
+  fi
+
+
 	while true; do
 
 	read -r -p "Do you want to proceed in folder -- ${PWD##*/}? (y/n) " yn
@@ -111,6 +161,7 @@ check() {
 	esac
 
 	done
+
 
 	echo Starting FFMPEG
 cat << "EOF"
@@ -159,6 +210,7 @@ check_delete(){
 	done
 }
 
+DIR=0;
 HELP=0;
 DELETE=0;
 COMPRESS=0;
@@ -181,29 +233,16 @@ esac
 done
 
 STARTDIR="$PWD";
-
-
-if [ "$HELP" == 1 ]; then
-  exit
-fi
-
 if [ -n "$DIR" ]; then
     cd "$DIR"
     STARTDIR=$DIR
 fi
 
-if [ "$DELETE" == 1 ]; then
-    check_delete
-    check
-    main_delete_files
-  else
-    check
-    main_ftd
+if [ "$HELP" == 1 ]; then
+  exit
 fi
 
-if [ "$COMPRESS" == 1 ]; then
-      cd "$STARTDIR"
-      compression
-fi
+check
+main
 
 echo FINISHED
