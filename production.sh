@@ -91,7 +91,13 @@ compression() {
       HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30" -r 60.0 -q 22.0 --encoder-level 5.1
       # HandBrakeCLI -i "${folder}".MP4 --preset-import-file [PATH to JSON] -o "${folder} (compressed)".MP4
       fi
+      if [ "$DELETE" == 1 ]; then
+      rm "${folder}".MP4
+      fi
+
   done
+
+
 }
 
 check() {
