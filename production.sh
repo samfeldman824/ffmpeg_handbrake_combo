@@ -93,6 +93,7 @@ compression() {
       fi
       if [ "$DELETE" == 1 ]; then
       rm "${folder}".MP4
+      mv "${folder}cp".MP4 "${folder}".MP4
       fi
 
   done
