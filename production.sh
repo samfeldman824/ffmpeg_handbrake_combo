@@ -159,6 +159,9 @@ check_delete(){
 	done
 }
 
+HELP=0;
+DELETE=0;
+COMPRESS=0;
 
 while getopts ":f:cdh" opt; do
 case $opt in
@@ -178,6 +181,7 @@ esac
 done
 
 STARTDIR="$PWD";
+
 
 if [ "$HELP" == 1 ]; then
   exit
