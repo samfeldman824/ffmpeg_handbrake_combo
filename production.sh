@@ -205,3 +205,5 @@ if [ "$COMPRESS" == 1 ]; then
       cd "$STARTDIR"
       compression
 fi
+
+echo FINISHED
