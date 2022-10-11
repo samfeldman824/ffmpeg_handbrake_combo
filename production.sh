@@ -3,7 +3,6 @@ set -e
 
 ffmpeg_concat_ftd() {
     folder="${PWD##*/}"
-    # for f in $(find . -iname "*.MP4" -type f -size -4020M); do echo "file '$f'" >> files.txt | echo "'$f'" >> filesdelete.txt; done
     find . -iname "*.MP4" -type f -size -4020M -print0 | while IFS= read -r -d '' f;
     do
     echo "file '$f'" >> filestmp.txt;
@@ -14,7 +13,6 @@ ffmpeg_concat_ftd() {
     rm filestmp.txt filesdeletetmp.txt
     ffmpeg -f concat -safe 0 -i files.txt -c copy "${folder}".MP4
     mkdir "$folder split files"
-    # cat filesdelete.txt | xargs -I {} mv {} "$folder split files"
     < filesdelete.txt xargs -I {} mv {} "$folder split files"
     rm files.txt filesdelete.txt
 
@@ -22,7 +20,6 @@ ffmpeg_concat_ftd() {
 
 ffmpeg_concat_delete_files() {
 	folder="${PWD##*/}"
-	# for f in $(find . -iname "*.MP4" -type f -size -4020M); do echo "file '$f'" >> files.txt | echo "'$f'" >> filesdelete.txt; done
   find . -iname "*.MP4" -type f -size -4020M -print0 | while IFS= read -r -d '' f;
   do
   echo "file '$f'" >> filestmp.txt;
@@ -39,7 +36,6 @@ ffmpeg_concat_delete_files() {
 move_split_files() {
     cd "$root"
     mkdir "files to delete"
-    # find . -type d -name "*split files" -exec mv '{}' "$( realpath 'files to delete')" \;
     array=()
     while IFS=  read -r -d $'\0'; do
     array+=("$REPLY")
