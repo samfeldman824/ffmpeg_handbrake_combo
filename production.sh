@@ -26,21 +26,6 @@ ffmpeg_concat() {
 
 }
 
-ffmpeg_concat_delete_files() {
-	folder="${PWD##*/}"
-  find . -iname "*.MP4" -type f -size -4020M -print0 | while IFS= read -r -d '' f;
-  do
-  echo "file '$f'" >> filestmp.txt;
-  sort filestmp.txt > files.txt;
-  echo "'$f'" >> filesdeletetmp.txt;
-  sort filesdeletetmp.txt > filesdelete.txt;
-  done
-  rm filestmp.txt filesdeletetmp.txt
-	ffmpeg -f concat -safe 0 -i files.txt -c copy "${folder}".MP4
-	xargs -I{} rm -r "{}" < filesdelete.txt
-	rm files.txt filesdelete.txt
-}
-
 move_split_files() {
     cd "$root"
     mkdir "files to delete"
@@ -76,18 +61,6 @@ main() {
           compression
     fi
 
-}
-
-main_delete_files() {
-	IFS=$'\n'
-	root="$PWD";
-  array=()
-  while IFS='' read -r line; do array+=("$line"); done < <(find "$root" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
-	for i in "${array[@]}"
-	do
-		cd "$( realpath "$i" )"
-		ffmpeg_concat_delete_files
-	done
 }
 
 compression() {
@@ -192,22 +165,6 @@ cat << "EOF"
 EOF
 
 	sleep 3
-}
-
-check_delete(){
-	while true; do
-
-	read -r -p "Are you sure you want to delete the leftover files? (y/n) " yn
-
-	case $yn in
-		[yY] ) echo confirmed;
-			break;;
-		[nN] ) echo exiting...;
-			exit;;
-		* ) echo invalid response;;
-	esac
-
-	done
 }
 
 DIR=0;
