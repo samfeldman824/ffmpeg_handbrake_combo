@@ -73,8 +73,11 @@ compression() {
       if [[ $i != *"files to delete"* ]]; then
       cd "$( realpath "$i" )"
       folder="${PWD##*/}"
-      HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30" -r 60.0 -q 22.0 --encoder-level 5.1
-      # HandBrakeCLI -i "${folder}".MP4 --preset-import-file [PATH to JSON] -o "${folder} (compressed)".MP4
+        if [ "$JSON" == 1 ]; then
+        HandBrakeCLI -i "${folder}".MP4 --preset-import-file "$JSONFILEPATH" -o "${folder}cp".MP4
+        else
+        HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30" -r 60.0 -q 22.0 --encoder-level 5.1
+        fi
       fi
       if [ "$DELETE" == 1 ]; then
       rm "${folder}".MP4
@@ -167,22 +170,26 @@ EOF
 	sleep 3
 }
 
-DIR=0;
+
 HELP=0;
 DELETE=0;
 COMPRESS=0;
+JSON=0;
 
-while getopts ":f:cdh" opt; do
+while getopts "f:j:cdh" opt; do
 case $opt in
   f) DIR=${OPTARG} ;;
   d) DELETE=1 ;;
   c) COMPRESS=1 ;;
+  j) JSONFILEPATH=${OPTARG}
+     JSON=1;;
   h) HELP=1
     echo "Options:
           -h       Print help
           -d       Delete leftover files
           -c       Compress concatenated files
-          -f       Run script in specified directory"
+          -f       Run script in specified directory
+          -j       Run compression with preset from JSON file"
 
   ;;
   *) echo "Invalid arguments" ;;
