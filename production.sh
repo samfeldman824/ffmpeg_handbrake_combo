@@ -29,10 +29,9 @@ ffmpeg_concat() {
 
 main() {
 	  IFS=$'\n';
-    root="$PWD";
 
     array=()
-    while IFS='' read -r line; do array+=("$line"); done < <(find "$root" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
+    while IFS='' read -r line; do array+=("$line"); done < <(find "$STARTDIR" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
 
     if [ "$DELETE" == 0 ]; then
     mkdir "files to delete"
@@ -55,9 +54,8 @@ main() {
 
 compression() {
   IFS=$'\n';
-  root="$PWD";
   compression_array=()
-  while IFS='' read -r line; do compression_array+=("$line"); done < <(find "$root" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
+  while IFS='' read -r line; do compression_array+=("$line"); done < <(find "$STARTDIR" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
   for i in "${compression_array[@]}"
   do
       if [[ $i != *"files to delete"* ]]; then
