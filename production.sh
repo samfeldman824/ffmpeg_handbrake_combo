@@ -20,16 +20,26 @@ ffmpeg_concat() {
     rm files.txt filesdelete.txt
     fi
 
+    if [ "$COMPRESS" == 1 ]; then
+      if [ "$JSON" == 1 ]; then
+      HandBrakeCLI -i "${folder}".MP4 --preset-import-file "$JSONFILEPATH" -o "${folder}cp".MP4
+      else
+      HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30" -r 60.0 -q 22.0 --encoder-level 5.1
+      fi
+    fi
+
     if [ "$DELETE" == 1 ]; then
     xargs -I{} rm -r "{}" < filesdelete.txt
     rm files.txt filesdelete.txt
+      if [ "$COMPRESS" == 1 ]; then
+      rm "${folder}".MP4
+      mv "${folder}cp".MP4 "${folder}".MP4
+      fi
     fi
-
 }
 
 main() {
 	  IFS=$'\n';
-
     array=()
     while IFS='' read -r line; do array+=("$line"); done < <(find "$STARTDIR" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
 
@@ -38,43 +48,11 @@ main() {
     FTDFOLDER="$( realpath 'files to delete')"
     fi
 
-
     for i in "${array[@]}"
     do
         cd "$( realpath "$i" )"
         ffmpeg_concat
     done
-
-    if [ "$COMPRESS" == 1 ]; then
-          cd "$STARTDIR"
-          compression
-    fi
-
-}
-
-compression() {
-  IFS=$'\n';
-  compression_array=()
-  while IFS='' read -r line; do compression_array+=("$line"); done < <(find "$STARTDIR" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
-  for i in "${compression_array[@]}"
-  do
-      if [[ $i != *"files to delete"* ]]; then
-      cd "$( realpath "$i" )"
-      folder="${PWD##*/}"
-        if [ "$JSON" == 1 ]; then
-        HandBrakeCLI -i "${folder}".MP4 --preset-import-file "$JSONFILEPATH" -o "${folder}cp".MP4
-        else
-        HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30" -r 60.0 -q 22.0 --encoder-level 5.1
-        fi
-      fi
-      if [ "$DELETE" == 1 ]; then
-      rm "${folder}".MP4
-      mv "${folder}cp".MP4 "${folder}".MP4
-      fi
-
-  done
-
-
 }
 
 check() {
@@ -158,7 +136,6 @@ EOF
 	sleep 3
 }
 
-
 HELP=0;
 DELETE=0;
 COMPRESS=0;
@@ -196,5 +173,4 @@ fi
 
 check
 main
-
 echo FINISHED
