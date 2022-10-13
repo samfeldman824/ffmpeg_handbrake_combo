@@ -16,6 +16,7 @@ ffmpeg_concat() {
     if [ "$DELETE" == 0 ]; then
     mkdir "$folder split files"
     < filesdelete.txt xargs -I {} mv {} "$folder split files"
+    mv "$folder split files" "$FTDFOLDER"
     rm files.txt filesdelete.txt
     fi
 
@@ -26,35 +27,24 @@ ffmpeg_concat() {
 
 }
 
-move_split_files() {
-    cd "$root"
-    mkdir "files to delete"
-    array=()
-    while IFS=  read -r -d $'\0'; do
-    array+=("$REPLY")
-    done < <(find . -type d -name "*split files" -print0)
-    for i in "${array[@]}"
-    do
-    mv "$( realpath "$i" )" "$( realpath 'files to delete')"
-    done
-
-}
-
 main() {
 	  IFS=$'\n';
     root="$PWD";
 
     array=()
     while IFS='' read -r line; do array+=("$line"); done < <(find "$root" -type d -exec sh -c 'set -- "$1"/*/; [ ! -d "$1" ]' sh {} \; ! -empty -print)
+
+    if [ "$DELETE" == 0 ]; then
+    mkdir "files to delete"
+    FTDFOLDER="$( realpath 'files to delete')"
+    fi
+
+
     for i in "${array[@]}"
     do
         cd "$( realpath "$i" )"
         ffmpeg_concat
     done
-
-    if [ "$DELETE" == 0 ]; then
-    move_split_files
-    fi
 
     if [ "$COMPRESS" == 1 ]; then
           cd "$STARTDIR"
