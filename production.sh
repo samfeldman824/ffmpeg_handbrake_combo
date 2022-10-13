@@ -16,7 +16,9 @@ ffmpeg_concat() {
     if [ "$DELETE" == 0 ]; then
     mkdir "$folder split files"
     < filesdelete.txt xargs -I {} mv {} "$folder split files"
-    mv "$folder split files" "$FTDFOLDER"
+      if [ "$SINGLE" == 0 ]; then
+      mv "$folder split files" "$FTDFOLDER"
+      fi
     rm files.txt filesdelete.txt
     fi
 
@@ -140,12 +142,14 @@ HELP=0;
 DELETE=0;
 COMPRESS=0;
 JSON=0;
+SINGLE=0;
 
-while getopts "f:j:cdh" opt; do
+while getopts "f:j:cdhs" opt; do
 case $opt in
   f) DIR=${OPTARG} ;;
   d) DELETE=1 ;;
   c) COMPRESS=1 ;;
+  s) SINGLE=1 ;;
   j) JSONFILEPATH=${OPTARG}
      JSON=1;;
   h) HELP=1
@@ -153,6 +157,7 @@ case $opt in
           -h       Print help
           -d       Delete leftover files
           -c       Compress concatenated files
+          -s       Run script on only and no subdirectories
           -f       Run script in specified directory
           -j       Run compression with preset from JSON file"
 
@@ -172,5 +177,11 @@ if [ "$HELP" == 1 ]; then
 fi
 
 check
+
+if [ "$SINGLE" == 1 ]; then
+  ffmpeg_concat
+  exit
+fi
+
 main
 echo FINISHED
