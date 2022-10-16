@@ -13,6 +13,7 @@ ffmpeg_concat() {
     rm filestmp.txt filesdeletetmp.txt
     ffmpeg -f concat -safe 0 -i files.txt -c copy "${folder}".MP4
 
+
     if [ "$DELETE" == 0 ]; then
     mkdir "$folder split files"
     < filesdelete.txt xargs -I {} mv {} "$folder split files"
@@ -28,6 +29,7 @@ ffmpeg_concat() {
       else
       HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30" -r 60.0 -q 22.0 --encoder-level 5.1
       fi
+      xattr -w com.apple.metadata:_kMDItemUserTags '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><array><string>handbrake</string></array></plist>' "${folder}cp".MP4
     fi
 
     if [ "$DELETE" == 1 ]; then
