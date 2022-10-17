@@ -159,7 +159,7 @@ case $opt in
           -h       Print help
           -d       Delete leftover files
           -c       Compress concatenated files
-          -s       Run script on only and no subdirectories
+          -s       Run script on only given folder and not subdirectories
           -f       Run script in specified directory
           -j       Run compression with preset from JSON file"
 
