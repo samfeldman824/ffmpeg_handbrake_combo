@@ -55,8 +55,11 @@ main() {
     for i in "${array[@]}"
     do
         cd "$( realpath "$i" )"
-        ffmpeg_concat
-    done
+
+        if [ "$(ls "$( realpath "$i" )")" ]; then
+          ffmpeg_concat
+        fi
+  done
 }
 
 check() {
