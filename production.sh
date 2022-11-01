@@ -27,7 +27,7 @@ ffmpeg_concat() {
       if [ "$JSON" == 1 ]; then
       HandBrakeCLI -i "${folder}".MP4 --preset-import-file "$JSONFILEPATH" -o "${folder}cp".MP4
       else
-      HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30" -b 4000 --no-two-pass --encoder-level auto --vfr -e vt_h264
+      HandBrakeCLI -i "${folder}".MP4 -o "${folder}cp".MP4 --preset "Very Fast 1080p30" -b 4000 --encoder-level auto --vfr -e vt_h264
       fi
       xattr -w com.apple.metadata:_kMDItemUserTags '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><array><string>handbrake</string></array></plist>' "${folder}cp".MP4
     fi
