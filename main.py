@@ -1,4 +1,3 @@
-import ffmpeg
 import subprocess
 import os
 from natsort import natsorted
@@ -12,34 +11,37 @@ def ffmpeg_concat():
     open("files.txt", "x")
 
     path = os.getcwd()
-    list = os.listdir(path)
     name = os.path.basename(path)
 
-    filestmp = []
-    for file in list:
-        if file.endswith(".MP4"):
-            filestmp.append(file)
-    filestmp = natsorted(filestmp)
+    findCMD = 'find . -iname "*.MP4" -type f -size -4020M -print0'
+    out = subprocess.Popen(findCMD,shell=True,stdin=subprocess.PIPE, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+    (stdout, stderr) = out.communicate()
+    filelist = natsorted(stdout.decode().split('\x00')[:-1])
 
-    for file in filestmp:
+    for file in filelist:
         f = open("files.txt", "a")
         f.write("file '" + file + "'\n")
         f.close()
-    title = name + ".MP4"
-    # os.system("ffmpeg -f concat -safe 0 -i " + 'files.txt' + " -c copy title.MP4")
-    os.remove("files.txt")
-
-    ftd = name + " files to delete"
-    os.mkdir("files to delete")
+    title = '_'.join(name.split())
+    os.system(f"ffmpeg -f concat -safe 0 -i files.txt -c copy {title}.MP4")
+    # os.remove("files.txt")
 
 
-    for file in filestmp:
-        source = path + '/' + file
-        destination = path + '/' + ftd + '/' + file
-        shutil.move(source, destination)
 
+
+    # os.mkdir("files to delete")
+    # ftdpath = os.path.abspath('files to delete')
+
+    # for file in filestmp:
+    #     source = os.path.abspath(file)
+    #     destination = ftdpath + '/' + file
+    #     shutil.move(source, destination)
 
     # for file in filestmp:
     #     os.remove(file)
 
+    # os.system(f"HandBrakeCLI -i {title}.MP4 -o {title}'(cp)'.MP4 --preset 'Very Fast 1080p30' -b 4000 --encoder-level auto --vfr -e vt_h264")
+
 ffmpeg_concat()
+
+
