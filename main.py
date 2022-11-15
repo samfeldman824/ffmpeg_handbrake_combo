@@ -14,18 +14,8 @@ parser.add_argument('-f', '-filepath', help='Run script in specified directory')
 parser.add_argument('-j', '-json', help='Run compression with preset from given JSON file')
 args = parser.parse_args()
 
-if args.f:
-    print(args.f)
-
-if args.j:
-    print(args.j)
 
 # os.chdir('/Users/samfeldman/Desktop/Tennis/testfolder copy 2')
-
-path = os.getcwd()
-list = os.listdir(path)
-
-
 
 def ffmpeg_concat():
     open("files.txt", "x")
@@ -40,8 +30,6 @@ def ffmpeg_concat():
     # for f in list:
     #     if file.endswith(".MP4") and os.path.getsize(f) < 4200000000:
 
-
-
     for file in filelist:
         ft = open("files.txt", "a")
         ft.write("file '" + file + "'\n")
@@ -50,23 +38,26 @@ def ffmpeg_concat():
     os.system(f"ffmpeg -f concat -safe 0 -i files.txt -c copy {title}.MP4")
     os.remove("files.txt")
 
+    if (args.d is False):
+        os.mkdir(f"{title} split files")
+        split_files_path = os.path.abspath(f"{title} split files")
+        for file in filelist:
+            source = os.path.abspath(file)
+            destination = split_files_path + '/' + file
+            shutil.move(source, destination)
+        files_to_delete_path = path + '/' + ("files to delete")
+        split_destination = files_to_delete_path + '/' + f"{title} split files" + '/' + file    
+        shutil.move(split_files_path, split_destination)
 
+    if (args.d):
+        for file in filelist:
+            os.remove(file)
 
-
-    os.mkdir(f"{title} split files")
-    split_files_path = os.path.abspath(f"{title} split files")
-    for file in filelist:
-        source = os.path.abspath(file)
-        destination = split_files_path + '/' + file
-        shutil.move(source, destination)
-    files_to_delete_path = path + '/' + ("files to delete")
-    split_destination = files_to_delete_path + '/' + f"{title} split files" + '/' + file    
-    shutil.move(split_files_path, split_destination)
-
-    # for file in filelist:
-    #     os.remove(file)
-
-    # os.system(f"HandBrakeCLI -i {title}.MP4 -o {title}'(cp)'.MP4 --preset 'Very Fast 1080p30' -b 4000 --encoder-level auto --vfr -e vt_h264")
+    if (args.c):
+        if (args.j):
+            os.system(f"HandBrakeCLI -i {title}.MP4 --preset-import-file {j} -o {title}'(cp)'.MP4 ")
+        else:
+            os.system(f"HandBrakeCLI -i {title}.MP4 -o {title}'(cp)'.MP4 --preset 'Very Fast 1080p30' -b 4000 --encoder-level auto --vfr -e vt_h264")
 
 # ffmpeg_concat()
 
@@ -89,14 +80,21 @@ def dir_no_subs(directory_path, list):
 def main():
     directory_list = []
     dir_no_subs(path, directory_list)
-    os.mkdir(path + '/' + "files to delete")
+
+    if (args.d is False):
+        os.mkdir(path + '/' + "files to delete")
     
     
     for i in directory_list:
         os.chdir(i)
         ffmpeg_concat()
 
+path = os.getcwd()
+list = os.listdir(path)
+
+
 main()
+
 
 
 
