@@ -2,8 +2,23 @@ import subprocess
 import os
 from natsort import natsorted
 import shutil
+import argparse
 
 print('start')
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-d', '-delete', help='Delete leftover files', action='store_true')
+parser.add_argument('-c', '-compress', help='Compress concatenated files', action='store_true')
+parser.add_argument('-s', '-single', help='Run script on only given folder and not subdirectories', action='store_true')
+parser.add_argument('-f', '-filepath', help='Run script in specified directory')
+parser.add_argument('-j', '-json', help='Run compression with preset from given JSON file')
+args = parser.parse_args()
+
+if args.f:
+    print(args.f)
+
+if args.j:
+    print(args.j)
 
 # os.chdir('/Users/samfeldman/Desktop/Tennis/testfolder copy 2')
 
@@ -45,7 +60,8 @@ def ffmpeg_concat():
         destination = split_files_path + '/' + file
         shutil.move(source, destination)
     files_to_delete_path = path + '/' + ("files to delete")
-    split_destination = files_to_delete_path + '/' + f"{title} split files" + '/' + file    shutil.move(split_files_path, split_destination)
+    split_destination = files_to_delete_path + '/' + f"{title} split files" + '/' + file    
+    shutil.move(split_files_path, split_destination)
 
     # for file in filelist:
     #     os.remove(file)
