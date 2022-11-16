@@ -14,6 +14,8 @@ parser.add_argument('-f', '-filepath', help='Run script in specified directory')
 parser.add_argument('-j', '-json', help='Run compression with preset from given JSON file')
 args = parser.parse_args()
 
+# args.d = True
+# args.c = True
 
 # os.chdir('/Users/samfeldman/Desktop/Tennis/testfolder copy 2')
 
@@ -45,19 +47,29 @@ def ffmpeg_concat():
             source = os.path.abspath(file)
             destination = split_files_path + '/' + file
             shutil.move(source, destination)
-        files_to_delete_path = path + '/' + ("files to delete")
-        split_destination = files_to_delete_path + '/' + f"{title} split files" + '/' + file    
-        shutil.move(split_files_path, split_destination)
-
-    if (args.d):
-        for file in filelist:
-            os.remove(file)
+        if (args.s is False):
+            files_to_delete_path = path + '/' + ("files to delete")
+            split_destination = files_to_delete_path + '/' + f"{title} split files"   
+            shutil.move(split_files_path, split_destination)
 
     if (args.c):
         if (args.j):
             os.system(f"HandBrakeCLI -i {title}.MP4 --preset-import-file {j} -o {title}'(cp)'.MP4 ")
         else:
             os.system(f"HandBrakeCLI -i {title}.MP4 -o {title}'(cp)'.MP4 --preset 'Very Fast 1080p30' -b 4000 --encoder-level auto --vfr -e vt_h264")
+
+    
+
+    if (args.d):
+        for file in filelist:
+            os.remove(file)
+        if (args.c):
+            new = os.path.abspath(f"{title}.MP4")
+            os.remove(f"{title}.MP4")
+            old = os.path.abspath(f"{title}(cp).MP4")
+            os.rename(old, new)
+
+    
 
 # ffmpeg_concat()
 
@@ -89,11 +101,18 @@ def main():
         os.chdir(i)
         ffmpeg_concat()
 
+if (args.f):
+    os.chdir(args.f)
+
 path = os.getcwd()
 list = os.listdir(path)
 
+if (args.s):
+    ffmpeg_concat()
+else:
+    main()
 
-main()
+print("FINISHED")
 
 
 
