@@ -4,8 +4,6 @@ from natsort import natsorted
 import shutil
 import argparse
 
-print('start')
-
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '-delete', help='Delete leftover files', action='store_true')
 parser.add_argument('-c', '-compress', help='Compress concatenated files', action='store_true')
@@ -90,11 +88,61 @@ def main():
         os.chdir(i)
         ffmpeg_concat()
 
+def check_c():
+    if (args.c):
+        answer = input("Are you sure you want to compress all concatenated files? (y/n) ")
+
+        if answer == 'y':
+            print("Confirmed\n")
+        if answer == 'n':
+            print("Exiting")
+            exit()
+        if answer != 'y':
+            print("Invalid response. Please type y or n\n")
+            check_c()
+
+def check_d():
+    if (args.d):
+        answer = input("Are you sure you want to delete the leftover files? (y/n) ")
+
+        if answer == 'y':
+            print("Confirmed\n")
+        if answer == 'n':
+            print("Exiting")
+            exit()
+        if answer != 'y':
+            print("Invalid response. Please type y or n\n")
+            check_d()
+
+def check_f():
+    answer = input(f"Do you want to proceed in folder -- {folder}? (y/n) ")
+
+    if answer == 'y':
+        print("Confirmed\n")
+    if answer == 'n':
+        print("Exiting")
+        exit()
+    if answer != 'y':
+        print("Invalid response. Please type y or n\n")
+        check_f()
+    
+
 if (args.f):
     os.chdir(args.f)
 
 path = os.getcwd()
 list = os.listdir(path)
+folder = os.path.basename(path)
+
+print('Starting\n')
+
+if (args.d):
+    check_d()
+
+if (args.c):
+    check_c()
+
+check_f()
 
 main()
 
