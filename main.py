@@ -22,7 +22,7 @@ args = parser.parse_args()
 def ffmpeg_concat():
     """finds and combines all MP4 files in folder"""
     current_path = os.getcwd()
-    name = os.path.basename(current_path)
+    title = os.path.basename(current_path)
     open("files.txt", "x", encoding="utf8")
 
     filelist = []
@@ -36,8 +36,7 @@ def ffmpeg_concat():
         fopen = open("files.txt", "a", encoding="utf8")
         fopen.write("file '" + file + "'\n")
         fopen.close()
-    title = '_'.join(name.split())
-    os.system(f"ffmpeg -f concat -safe 0 -i files.txt -c copy {title}.MP4")
+    os.system(f"ffmpeg -f concat -safe 0 -i files.txt -c copy '{title}.MP4'")
     os.remove("files.txt")
 
     if args.d is False:
