@@ -1,6 +1,4 @@
 """System module"""
-import json
-import subprocess
 import shutil
 import argparse
 import os
@@ -23,18 +21,16 @@ args = parser.parse_args()
 
 def ffmpeg_concat():
     """finds and combines all MP4 files in folder"""
-    open("files.txt", "x", encoding="utf8")
     current_path = os.getcwd()
     name = os.path.basename(current_path)
+    open("files.txt", "x", encoding="utf8")
 
-    find_cmd = 'find . -iname "*.MP4" -type f -size -4020M -print0'
-    out = subprocess.Popen(find_cmd, shell=True, stdin=subprocess.PIPE,
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    (stdout, stderr) = out.communicate()
-    filelist = natsorted(stdout.decode().split('\x00')[:-1])
+    filelist = []
 
-    # for f in list:
-    #     if file.endswith(".MP4") and os.path.getsize(f) < 4200000000:
+    for filename in os.listdir():
+        if filename.endswith(".MP4") and os.path.getsize(filename) < 4200000000:
+            filelist.append(filename)
+    filelist = natsorted(filelist)
 
     for file in filelist:
         fopen = open("files.txt", "a", encoding="utf8")
@@ -51,15 +47,15 @@ def ffmpeg_concat():
             source = os.path.abspath(file)
             destination = split_files_path + '/' + file
             shutil.move(source, destination)
-            files_to_delete_path = path + '/' + ("files to delete")
-            split_destination = files_to_delete_path + \
+        files_to_delete_path = path + '/' + ("files to delete")
+        split_destination = files_to_delete_path + \
                 '/' + f"{title} split files"
-            shutil.move(split_files_path, split_destination)
+        shutil.move(split_files_path, split_destination)
 
     if args.c:
         if args.j:
             os.system(
-                f"HandBrakeCLI -i {title}.MP4 --preset-import-file {json} -o {title}'(cp)'.MP4 ")
+                f"HandBrakeCLI -i {title}.MP4 --preset-import-file {args.j} -o {title}'(cp)'.MP4 ")
         else:
             os.system(
                 f"HandBrakeCLI -i {title}.MP4 -o {title}'(cp)'.MP4 --preset 'Very Fast 1080p30'\
