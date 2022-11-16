@@ -9,7 +9,6 @@ print('start')
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '-delete', help='Delete leftover files', action='store_true')
 parser.add_argument('-c', '-compress', help='Compress concatenated files', action='store_true')
-parser.add_argument('-s', '-single', help='Run script on only given folder and not subdirectories', action='store_true')
 parser.add_argument('-f', '-filepath', help='Run script in specified directory')
 parser.add_argument('-j', '-json', help='Run compression with preset from given JSON file')
 args = parser.parse_args()
@@ -44,7 +43,6 @@ def ffmpeg_concat():
             source = os.path.abspath(file)
             destination = split_files_path + '/' + file
             shutil.move(source, destination)
-        if (args.s is False):
             files_to_delete_path = path + '/' + ("files to delete")
             split_destination = files_to_delete_path + '/' + f"{title} split files"   
             shutil.move(split_files_path, split_destination)
@@ -98,10 +96,7 @@ if (args.f):
 path = os.getcwd()
 list = os.listdir(path)
 
-if (args.s):
-    ffmpeg_concat()
-else:
-    main()
+main()
 
 print("FINISHED")
 
