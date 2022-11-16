@@ -14,9 +14,6 @@ parser.add_argument('-f', '-filepath', help='Run script in specified directory')
 parser.add_argument('-j', '-json', help='Run compression with preset from given JSON file')
 args = parser.parse_args()
 
-# args.d = True
-# args.c = True
-
 # os.chdir('/Users/samfeldman/Desktop/Tennis/testfolder copy 2')
 
 def ffmpeg_concat():
@@ -69,10 +66,6 @@ def ffmpeg_concat():
             old = os.path.abspath(f"{title}(cp).MP4")
             os.rename(old, new)
 
-    
-
-# ffmpeg_concat()
-
 def dir_no_subs(directory_path, list):
     for file in os.scandir(directory_path):
         if file.is_dir():
@@ -87,8 +80,6 @@ def dir_no_subs(directory_path, list):
                 list.append(file.path)           
             dir_no_subs(file, list)
     
-                
-
 def main():
     directory_list = []
     dir_no_subs(path, directory_list)
