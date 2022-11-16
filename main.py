@@ -4,7 +4,6 @@ import argparse
 import os
 from natsort import natsorted
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '-d', '-delete', help='Delete leftover files', action='store_true')
@@ -17,7 +16,6 @@ parser.add_argument(
 args = parser.parse_args()
 
 # os.chdir('/Users/samfeldman/Desktop/Tennis/testfolder copy 2')
-
 
 def ffmpeg_concat():
     """finds and combines all MP4 files in folder"""
@@ -54,10 +52,10 @@ def ffmpeg_concat():
     if args.c:
         if args.j:
             os.system(
-                f"HandBrakeCLI -i {title}.MP4 --preset-import-file {args.j} -o {title}'(cp)'.MP4 ")
+                f"HandBrakeCLI -i '{title}'.MP4 --preset-import-file {args.j} -o '{title}(cp)'.MP4 ")
         else:
             os.system(
-                f"HandBrakeCLI -i {title}.MP4 -o {title}'(cp)'.MP4 --preset 'Very Fast 1080p30'\
+                f"HandBrakeCLI -i '{title}'.MP4 -o '{title}(cp)'.MP4 --preset 'Very Fast 1080p30'\
                      -b 4000 --encoder-level auto --vfr -e vt_h264")
 
     if args.d:
@@ -95,8 +93,8 @@ def main():
     if args.d is False:
         os.mkdir(path + '/' + "files to delete")
 
-    for i in directory_list:
-        os.chdir(i)
+    for file in directory_list:
+        os.chdir(file)
         ffmpeg_concat()
 
 
@@ -115,7 +113,6 @@ def check_c():
             print("Invalid response. Please type y or n\n")
             check_c()
 
-
 def check_d():
     """confirms user intends to delete leftover files"""
     if args.d:
@@ -131,7 +128,6 @@ def check_d():
             print("Invalid response. Please type y or n\n")
             check_d()
 
-
 def check_f():
     """confirms user intends to execute main on specified folder"""
     answer = input(f"Do you want to proceed in folder -- {folder}? (y/n) ")
@@ -145,15 +141,14 @@ def check_f():
         print("Invalid response. Please type y or n\n")
         check_f()
 
-
 if args.f:
     os.chdir(args.f)
 
 path = os.getcwd()
-dirlist = os.listdir(path)
 folder = os.path.basename(path)
 
 print('Starting\n')
+
 
 if args.d:
     check_d()
