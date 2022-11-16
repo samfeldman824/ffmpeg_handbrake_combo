@@ -1,4 +1,4 @@
-"""Module providing command line access"""
+"""System module"""
 import json
 import subprocess
 import shutil
@@ -22,6 +22,7 @@ args = parser.parse_args()
 
 
 def ffmpeg_concat():
+    """finds and combines all MP4 files in folder"""
     open("files.txt", "x", encoding="utf8")
     current_path = os.getcwd()
     name = os.path.basename(current_path)
@@ -75,6 +76,8 @@ def ffmpeg_concat():
 
 
 def dir_no_subs(directory_path, nsub_list):
+    """finds all directories with no subdirectories and appends their
+    absolute path to given list"""
     for file in os.scandir(directory_path):
         if file.is_dir():
             os.chdir(file.path)
@@ -90,6 +93,7 @@ def dir_no_subs(directory_path, nsub_list):
 
 
 def main():
+    """executes ffmpeg_concat in each folder nsub list"""
     directory_list = []
     dir_no_subs(path, directory_list)
 
@@ -102,6 +106,7 @@ def main():
 
 
 def check_c():
+    """confirms user intends to compress their files"""
     if args.c:
         answer = input(
             "Are you sure you want to compress all concatenated files? (y/n) ")
@@ -117,6 +122,7 @@ def check_c():
 
 
 def check_d():
+    """confirms user intends to delete leftover files"""
     if args.d:
         answer = input(
             "Are you sure you want to delete the leftover files? (y/n) ")
@@ -132,6 +138,7 @@ def check_d():
 
 
 def check_f():
+    """confirms user intends to execute main on specified folder"""
     answer = input(f"Do you want to proceed in folder -- {folder}? (y/n) ")
 
     if answer == 'y':
