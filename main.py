@@ -3,7 +3,6 @@ import shutil
 import argparse
 import os
 from natsort import natsorted
-
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '-d', '-delete', help='Delete leftover files', action='store_true')
@@ -52,7 +51,7 @@ def ffmpeg_concat():
     if args.c:
         if args.j:
             os.system(
-                f"HandBrakeCLI -i '{title}'.MP4 --preset-import-file {args.j} -o '{title}(cp)'.MP4 ")
+                f"HandBrakeCLI -i '{title}'.MP4 --preset-import-file {args.j} -o '{title}(cp)'.MP4")
         else:
             os.system(
                 f"HandBrakeCLI -i '{title}'.MP4 -o '{title}(cp)'.MP4 --preset 'Very Fast 1080p30'\
@@ -83,6 +82,8 @@ def dir_no_subs(directory_path, nsub_list):
             if nsub:
                 nsub_list.append(file.path)
             dir_no_subs(file, nsub_list)
+    if not nsub_list:
+        nsub_list.append(path)
 
 
 def main():
@@ -145,6 +146,7 @@ if args.f:
     os.chdir(args.f)
 
 path = os.getcwd()
+
 folder = os.path.basename(path)
 
 print('Starting\n')
