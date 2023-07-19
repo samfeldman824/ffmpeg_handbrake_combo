@@ -2,6 +2,7 @@
 import shutil
 import argparse
 import os
+import platform
 from natsort import natsorted
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -53,9 +54,15 @@ def ffmpeg_concat():
             os.system(
                 f"HandBrakeCLI -i '{title}'.MP4 --preset-import-file {args.j} -o '{title}(cp)'.MP4")
         else:
-            os.system(
-                f"HandBrakeCLI -i '{title}'.MP4 -o '{title}(cp)'.MP4 --preset 'Very Fast 1080p30'\
-                     -b 4000 --encoder-level auto --vfr -e vt_h264")
+            if platform.system() == "Darwin":
+                os.system(
+                    f"HandBrakeCLI -i '{title}'.MP4 -o '{title}(cp)'.MP4 --preset 'Very Fast 1080p30'\
+                        -r 59.94 --encoder-level auto -e vt_h265 -q 26")
+            else:
+                os.system(
+                    f"HandBrakeCLI -i '{title}'.MP4 -o '{title}(cp)'.MP4 --preset 'Very Fast 1080p30'\
+                        -r 59.94 --encoder-level auto -e h265 -q 22")
+
 
     if args.d:
         for file in filelist:
