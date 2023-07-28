@@ -30,12 +30,18 @@ def ffmpeg_concat():
             filelist.append(filename)
     filelist = natsorted(filelist)
 
+
+    folder_size = 0
     for file in filelist:
+        folder_size += os.path.getsize(file)
         fopen = open("files.txt", "a", encoding="utf8")
         fopen.write("file '" + file + "'\n")
         fopen.close()
     os.system(f"ffmpeg -f concat -safe 0 -i files.txt -c copy '{title}.MP4'")
     os.remove("files.txt")
+    concat_file = os.path.getsize(f'{title}.MP4')
+    print("folder size: ", folder_size)
+    print("concat size: ", concat_file)
 
     if args.d is False:
         os.mkdir(f"{title} split files")
@@ -57,7 +63,7 @@ def ffmpeg_concat():
             if platform.system() == "Darwin":
                 os.system(
                     f"HandBrakeCLI -i '{title}'.MP4 -o '{title}(cp)'.MP4 --preset 'Very Fast 1080p30'\
-                        -r 59.94 --encoder-level auto -e vt_h265 -q 26")
+                        -r 59.94 --encoder-level auto -e vt_h265 -q 30")
             else:
                 os.system(
                     f"HandBrakeCLI -i '{title}'.MP4 -o '{title}(cp)'.MP4 --preset 'Very Fast 1080p30'\
