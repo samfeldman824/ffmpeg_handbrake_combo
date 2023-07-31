@@ -230,32 +230,35 @@ def check_f():
     if answer != 'y':
         print("Invalid response. Please type y or n\n")
         check_f()
-# if user added "-f" flag to indicate which directory to run program in
-if args.f:
-    # changes current working directory to given filepath
-    os.chdir(args.f)
-# sets "path" as the absolute path of current working directory
-path = os.getcwd()
 
-# sets "folder" as base path of current working directory
-# base path is just the name lowest directory in the path hierarchy
-folder = os.path.basename(path)
 
-print('Starting\n')
+if __name__ == "__main__":
+    # if user added "-f" flag to indicate which directory to run program in
+    if args.f:
+        # changes current working directory to given filepath
+        os.chdir(args.f)
+    # sets "path" as the absolute path of current working directory
+    path = os.getcwd()
 
-# if user added "-d" flag to delete old files
-if args.d:
-    # asks user to confirm
-    check_d()
-# if user added "-c" flag to compress concatenated files
-if args.c:
-    # asks user to confirm
-    check_c()
+    # sets "folder" as base path of current working directory
+    # base path is just the name lowest directory in the path hierarchy
+    folder = os.path.basename(path)
 
-# asks user to confirm current working directory is correct
-check_f()
+    print('Starting\n')
 
-# runs main function
-main()
+    # if user added "-d" flag to delete old files
+    if args.d:
+        # asks user to confirm
+        check_d()
+    # if user added "-c" flag to compress concatenated files
+    if args.c:
+        # asks user to confirm
+        check_c()
 
-print("FINISHED")
+    # asks user to confirm current working directory is correct
+    check_f()
+
+    # runs main function
+    main()
+
+    print("FINISHED")
