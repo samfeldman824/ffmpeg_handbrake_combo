@@ -17,14 +17,16 @@ args = parser.parse_args()
 
 # os.chdir('/Users/samfeldman/Desktop/Tennis/testfolder copy 2')
 
-def ffmpeg_concat(path):
+def ffmpeg_concat(root, r_dir):
     """finds and combines all MP4 files in folder"""
+
+    os.chdir(r_dir)
 
     # gets current directory
     current_path = os.getcwd()
 
     # gets name of folder from current directory
-    title = os.path.basename(current_path) # name of folder will be used as name of file
+    title = os.path.basename(r_dir) # name of folder will be used as name of file
 
     # creates "files.txt" file in current directory
     # "utf8" encoding is standard for text files
@@ -84,7 +86,7 @@ def ffmpeg_concat(path):
             destination = split_files_path + '/' + file
             shutil.move(source, destination)
         # move current folder for old files to main folder for old files
-        files_to_delete_path = path + '/' + ("files to delete")
+        files_to_delete_path = root + '/' + ("files to delete")
         split_destination = files_to_delete_path + \
                 '/' + f"{title} split files"
         shutil.move(split_files_path, split_destination)
@@ -156,26 +158,7 @@ def dir_no_subs(directory_path, nsub_list):
     if not nsub_list:
         # adds original directory to "nsub_list"
         nsub_list.append(path)
-
-
-def main():
-    """executes ffmpeg_concat in each folder nsub list"""
-    # initializes empty list of directories to run ffmpeg in
-    directory_list = []
-    # fills "directory_list" with all directories to run ffmpeg in
-    dir_no_subs(path, directory_list)
-
-    # if user did not add "-d" flag to delete old files
-    if args.d is False:
-        # creates directory to store old files
-        os.mkdir(path + '/' + "files to delete")
-
-    # loops through each folder in "directory_list"
-    for file in directory_list:
-        # changes working directory to file
-        os.chdir(file)
-        # runs ffmpeg in current working directory
-        ffmpeg_concat(path)
+    
 
 
 def check_c():
@@ -240,7 +223,7 @@ if __name__ == "__main__":
         # changes current working directory to given filepath
         os.chdir(args.f)
     # sets "path" as the absolute path of current working directory
-    path = os.getcwd()
+    base_dir = os.getcwd()
 
     # sets "folder" as base path of current working directory
     # base path is just the name lowest directory in the path hierarchy
@@ -260,7 +243,22 @@ if __name__ == "__main__":
     # asks user to confirm current working directory is correct
     check_f()
 
-    # runs main function
-    main()
+
+    # initializes empty list of directories to run ffmpeg in
+    directory_list = []
+    # fills "directory_list" with all directories to run ffmpeg in
+    dir_no_subs(path, directory_list)
+
+    # if user did not add "-d" flag to delete old files
+    if args.d is False:
+        # creates directory to store old files
+        os.mkdir(path + '/' + "files to delete")
+
+    # loops through each folder in "directory_list"
+    for file in directory_list:
+        # changes working directory to file
+        os.chdir(file)
+        # runs ffmpeg in current working directory
+        ffmpeg_concat(base_dir, file)
 
     print("FINISHED")
