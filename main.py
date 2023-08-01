@@ -17,7 +17,7 @@ args = parser.parse_args()
 
 # os.chdir('/Users/samfeldman/Desktop/Tennis/testfolder copy 2')
 
-def ffmpeg_concat():
+def ffmpeg_concat(path):
     """finds and combines all MP4 files in folder"""
 
     # gets current directory
@@ -103,12 +103,12 @@ def ffmpeg_concat():
                 # run handbrake on concatenated file using "VideoToolBox"
                 os.system(
                     f"HandBrakeCLI -i '{title}'.MP4 -o '{title}(cp)'.MP4 --preset 'Very Fast 1080p30'\
-                        -r 59.94 --encoder-level auto -e vt_h265 -q 30")
+                        -r 'same as source' --encoder-level auto -e vt_h265 -q 30")
             else:
                 # run handbrake on concatenated file using normal presets
                 os.system(
                     f"HandBrakeCLI -i '{title}'.MP4 -o '{title}(cp)'.MP4 --preset 'Very Fast 1080p30'\
-                        -r 59.94 --encoder-level auto -e h265 -q 22")
+                        -r 'same as source' --encoder-level auto -e h265 -q 22")
 
     # if user added "-d" flag to delete old files
     if args.d:
@@ -127,6 +127,8 @@ def ffmpeg_concat():
 def dir_no_subs(directory_path, nsub_list):
     """finds all directories with no subdirectories and appends their
     absolute path to given list"""
+
+    path = directory_path
 
     # loop through each file of given directory path
     for file in os.scandir(directory_path):
@@ -173,7 +175,7 @@ def main():
         # changes working directory to file
         os.chdir(file)
         # runs ffmpeg in current working directory
-        ffmpeg_concat()
+        ffmpeg_concat(path)
 
 
 def check_c():
