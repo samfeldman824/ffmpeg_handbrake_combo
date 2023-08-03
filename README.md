@@ -24,7 +24,7 @@ optional arguments:
                       Run the script in the specified directory
   -j JSON, -json JSON
                       Run compression with presets from the given JSON file
-
+```
 
 ## Testing
 
