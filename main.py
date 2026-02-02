@@ -4,7 +4,16 @@ import argparse
 import os
 import platform
 import subprocess
+import logging
 from natsort import natsorted
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 # Default file size limit in bytes (4.2 GB)
 DEFAULT_SIZE_LIMIT = 4200000000
@@ -67,9 +76,9 @@ def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
     # calculate size of the newly concatenated file
     concat_file = os.path.getsize(os.path.join(current_path, f'{title}.mp4'))
     
-    # print out size of all smaller files and the concatenated file
-    print("folder size: ", folder_size)
-    print("concat size: ", concat_file)
+    # log size of all smaller files and the concatenated file
+    logger.info("Folder size: %d bytes", folder_size)
+    logger.info("Concat size: %d bytes", concat_file)
 
     # if user did not add "-d" flag to save old files
     if not args.d:
@@ -166,15 +175,15 @@ def check_c(args: argparse.Namespace) -> None:
                 "Are you sure you want to compress all concatenated files? (y/n) ")
             # if user confirms, continue
             if answer.lower() == 'y':
-                print("Confirmed\n")
+                logger.info("Confirmed")
                 break
             # if user does not confirm, exit program
             elif answer.lower() == 'n':
-                print("Exiting")
+                logger.info("Exiting")
                 exit()
             # if user response is not readable, ask question again
             else:
-                print("Invalid response. Please type y or n\n")
+                logger.warning("Invalid response. Please type y or n")
 
 def check_d(args: argparse.Namespace) -> None:
     """confirms user intends to delete leftover files"""
@@ -186,15 +195,16 @@ def check_d(args: argparse.Namespace) -> None:
                 "Are you sure you want to delete the leftover files? (y/n) ")
             # if user confirms, continue
             if answer.lower() == 'y':
-                print("Confirmed\n")
+                logger.info("Confirmed")
                 break
             # if user does not confirm, exit program
             elif answer.lower() == 'n':
-                print("Exiting")
+                logger.info("Exiting")
                 exit()
             # if user response is not readable, ask question again
             else:
-                print("Invalid response. Please type y or n\n")
+                logger.warning("Invalid response. Please type y or n")
+
 
 def check_f(folder: str) -> None:
     """confirms user intends to execute main on specified folder"""
@@ -204,15 +214,15 @@ def check_f(folder: str) -> None:
 
         # if user confirms, continue
         if answer.lower() == 'y':
-            print("Confirmed\n")
+            logger.info("Confirmed")
             break
         # if user does not confirm, exit program
         elif answer.lower() == 'n':
-            print("Exiting")
+            logger.info("Exiting")
             exit()
         # if user response is not readable, ask question again
         else:
-            print("Invalid response. Please type y or n\n")
+            logger.warning("Invalid response. Please type y or n")
 
 
 def validate_tools(args: argparse.Namespace) -> None:
@@ -253,7 +263,7 @@ def main() -> None:
     # Validate that required tools are installed
     validate_tools(args)
 
-    print('Starting\n')
+    logger.info('Starting')
 
     # if user added "-d" flag to delete old files
     if args.d:
@@ -280,7 +290,7 @@ def main() -> None:
         # runs ffmpeg in current working directory
         ffmpeg_concat(base_dir, directory, args)
 
-    print("FINISHED")
+    logger.info("FINISHED")
 
 
 if __name__ == "__main__":
