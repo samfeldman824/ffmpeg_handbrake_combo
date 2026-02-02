@@ -191,7 +191,7 @@ def check_d(args):
             print("Invalid response. Please type y or n\n")
             check_d(args)
 
-def check_f():
+def check_f(folder):
     """confirms user intends to execute main on specified folder"""
     # asks user to confirm the current working directory is correct
     answer = input(f"Do you want to proceed in folder -- {folder}? (y/n) ")
@@ -206,7 +206,7 @@ def check_f():
     # if user response is not readable, ask question again
     else:
         print("Invalid response. Please type y or n\n")
-        check_f()
+        check_f(folder)
 
 
 def validate_tools(args):
@@ -258,7 +258,7 @@ if __name__ == "__main__":
         check_c(args)
 
     # asks user to confirm current working directory is correct
-    check_f()
+    check_f(folder)
 
     # fills "directory_list" with all directories to run ffmpeg in
     directory_list = dir_no_subs(base_dir)
