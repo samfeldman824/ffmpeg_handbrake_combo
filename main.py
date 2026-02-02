@@ -6,6 +6,9 @@ import platform
 import subprocess
 from natsort import natsorted
 
+# Default file size limit in bytes (4.2 GB)
+DEFAULT_SIZE_LIMIT = 4200000000
+
 def run_command(cmd_list: list[str], error_message: str) -> None:
     """Helper function to run subprocess commands with error handling"""
     try:
@@ -26,8 +29,8 @@ def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
 
     # loop through each file in current directory
     for filename in os.listdir(current_path):
-        # Checks that file ends with ".mp4" (case insensitive) and is smaller than 4.2 GB
-        if filename.lower().endswith(".mp4") and os.path.getsize(os.path.join(current_path, filename)) < 4200000000:
+        # Checks that file ends with ".mp4" (case insensitive) and is smaller than size limit
+        if filename.lower().endswith(".mp4") and os.path.getsize(os.path.join(current_path, filename)) < DEFAULT_SIZE_LIMIT:
             # adds filename to "filelist" if conditions are met
             filelist.append(filename)
 
