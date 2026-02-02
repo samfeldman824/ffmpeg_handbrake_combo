@@ -21,11 +21,6 @@ def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
     current_path = r_dir
     title = os.path.basename(r_dir)
     
-    # creates "files.txt" file in current directory
-    files_txt_path = os.path.join(current_path, "files.txt")
-    with open(files_txt_path, "w", encoding="utf8") as f:
-        pass
-
     # initialize empty list to store files that will be concatenated
     filelist = []
 
@@ -42,13 +37,18 @@ def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
     # initialize combined size all files in folder starting at 0
     folder_size = 0
 
-    # loop through each file in sorted list
+    # build ffmpeg file list entries
+    files_txt_entries = []
     for file in filelist:
         # Calculate size of all files in list
         folder_size += os.path.getsize(os.path.join(current_path, file))
-        # write file name formatted for ffmpeg to files.txt
-        with open(files_txt_path, "a", encoding="utf8") as f:
-            f.write("file '" + file + "'\n")
+        # build file entry formatted for ffmpeg
+        files_txt_entries.append(f"file '{file}'\n")
+
+    # write all entries to files.txt in one operation
+    files_txt_path = os.path.join(current_path, "files.txt")
+    with open(files_txt_path, "w", encoding="utf8") as f:
+        f.writelines(files_txt_entries)
 
     # run ffmpeg command that concatenates all files into one bigger file
     run_command([
