@@ -195,7 +195,7 @@ def check_f():
     """confirms user intends to execute main on specified folder"""
     # asks user to confirm the current working directory is correct
     answer = input(f"Do you want to proceed in folder -- {folder}? (y/n) ")
-    
+
     # if user confirms, continue
     if answer.lower() == 'y':
         print("Confirmed\n")
@@ -207,6 +207,17 @@ def check_f():
     else:
         print("Invalid response. Please type y or n\n")
         check_f()
+
+
+def validate_tools(args):
+    """Check that required tools (ffmpeg and HandBrakeCLI) are installed"""
+    # Check for ffmpeg (always required)
+    if shutil.which("ffmpeg") is None:
+        raise RuntimeError("ffmpeg is not installed or not in PATH. Please install ffmpeg.")
+
+    # Check for HandBrakeCLI only if compression flag is set
+    if args.c and shutil.which("HandBrakeCLI") is None:
+        raise RuntimeError("HandBrakeCLI is not installed or not in PATH. Please install HandBrakeCLI or run without the -c flag.")
 
 
 if __name__ == "__main__":
@@ -231,6 +242,9 @@ if __name__ == "__main__":
     
     # sets "folder" as base path of current working directory
     folder = os.path.basename(base_dir)
+
+    # Validate that required tools are installed
+    validate_tools(args)
 
     print('Starting\n')
 
