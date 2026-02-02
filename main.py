@@ -6,7 +6,7 @@ import platform
 import subprocess
 from natsort import natsorted
 
-def run_command(cmd_list, error_message):
+def run_command(cmd_list: list[str], error_message: str) -> None:
     """Helper function to run subprocess commands with error handling"""
     try:
         subprocess.run(cmd_list, check=True)
@@ -14,7 +14,7 @@ def run_command(cmd_list, error_message):
         raise RuntimeError(error_message)
 
 
-def ffmpeg_concat(root, r_dir, args):
+def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
     """finds and combines all MP4 files in folder"""
     
     # Use absolute paths to avoid directory changes
@@ -127,7 +127,7 @@ def ffmpeg_concat(root, r_dir, args):
             os.rename(old, new)
 
 
-def dir_no_subs(directory_path):
+def dir_no_subs(directory_path: str) -> list[str]:
     """finds all directories with no subdirectories and returns their
     absolute paths as a list using iterative os.walk()"""
 
@@ -153,7 +153,7 @@ def dir_no_subs(directory_path):
     return nsub_list
 
 
-def check_c(args):
+def check_c(args: argparse.Namespace) -> None:
     """confirms user intends to compress their files"""
     # if user added "-c" flag to compress concatenated files
     if args.c:
@@ -173,7 +173,7 @@ def check_c(args):
             else:
                 print("Invalid response. Please type y or n\n")
 
-def check_d(args):
+def check_d(args: argparse.Namespace) -> None:
     """confirms user intends to delete leftover files"""
     # if user added "-d" flag to delete old files
     if args.d:
@@ -193,7 +193,7 @@ def check_d(args):
             else:
                 print("Invalid response. Please type y or n\n")
 
-def check_f(folder):
+def check_f(folder: str) -> None:
     """confirms user intends to execute main on specified folder"""
     while True:
         # asks user to confirm the current working directory is correct
@@ -212,7 +212,7 @@ def check_f(folder):
             print("Invalid response. Please type y or n\n")
 
 
-def validate_tools(args):
+def validate_tools(args: argparse.Namespace) -> None:
     """Check that required tools (ffmpeg and HandBrakeCLI) are installed"""
     # Check for ffmpeg (always required)
     if shutil.which("ffmpeg") is None:
@@ -223,7 +223,7 @@ def validate_tools(args):
         raise RuntimeError("HandBrakeCLI is not installed or not in PATH. Please install HandBrakeCLI or run without the -c flag.")
 
 
-def main():
+def main() -> None:
     """Main entry point for the script"""
     parser = argparse.ArgumentParser()
     parser.add_argument(
