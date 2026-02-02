@@ -157,31 +157,52 @@ def check_c(args):
     """confirms user intends to compress their files"""
     # if user added "-c" flag to compress concatenated files
     if args.c:
-        # ask user to confirm
-        answer = input(
-            "Are you sure you want to compress all concatenated files? (y/n) ")
-        # if user confirms, continue
-        if answer.lower() == 'y':
-            print("Confirmed\n")
-        # if user does not confirm, exit program
-        elif answer.lower() == 'n':
-            print("Exiting")
-            exit()
-        # if user response is not readable, ask question again
-        else:
-            print("Invalid response. Please type y or n\n")
-            check_c(args)
+        while True:
+            # ask user to confirm
+            answer = input(
+                "Are you sure you want to compress all concatenated files? (y/n) ")
+            # if user confirms, continue
+            if answer.lower() == 'y':
+                print("Confirmed\n")
+                break
+            # if user does not confirm, exit program
+            elif answer.lower() == 'n':
+                print("Exiting")
+                exit()
+            # if user response is not readable, ask question again
+            else:
+                print("Invalid response. Please type y or n\n")
 
 def check_d(args):
     """confirms user intends to delete leftover files"""
     # if user added "-d" flag to delete old files
     if args.d:
-        # ask user to confirm
-        answer = input(
-            "Are you sure you want to delete the leftover files? (y/n) ")
+        while True:
+            # ask user to confirm
+            answer = input(
+                "Are you sure you want to delete the leftover files? (y/n) ")
+            # if user confirms, continue
+            if answer.lower() == 'y':
+                print("Confirmed\n")
+                break
+            # if user does not confirm, exit program
+            elif answer.lower() == 'n':
+                print("Exiting")
+                exit()
+            # if user response is not readable, ask question again
+            else:
+                print("Invalid response. Please type y or n\n")
+
+def check_f(folder):
+    """confirms user intends to execute main on specified folder"""
+    while True:
+        # asks user to confirm the current working directory is correct
+        answer = input(f"Do you want to proceed in folder -- {folder}? (y/n) ")
+
         # if user confirms, continue
         if answer.lower() == 'y':
             print("Confirmed\n")
+            break
         # if user does not confirm, exit program
         elif answer.lower() == 'n':
             print("Exiting")
@@ -189,24 +210,6 @@ def check_d(args):
         # if user response is not readable, ask question again
         else:
             print("Invalid response. Please type y or n\n")
-            check_d(args)
-
-def check_f(folder):
-    """confirms user intends to execute main on specified folder"""
-    # asks user to confirm the current working directory is correct
-    answer = input(f"Do you want to proceed in folder -- {folder}? (y/n) ")
-
-    # if user confirms, continue
-    if answer.lower() == 'y':
-        print("Confirmed\n")
-    # if user does not confirm, exit program
-    elif answer.lower() == 'n':
-        print("Exiting")
-        exit()
-    # if user response is not readable, ask question again
-    else:
-        print("Invalid response. Please type y or n\n")
-        check_f(folder)
 
 
 def validate_tools(args):
@@ -220,7 +223,8 @@ def validate_tools(args):
         raise RuntimeError("HandBrakeCLI is not installed or not in PATH. Please install HandBrakeCLI or run without the -c flag.")
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for the script"""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-d', '-delete', help='Delete leftover files', action='store_true')
@@ -274,3 +278,7 @@ if __name__ == "__main__":
         ffmpeg_concat(base_dir, directory, args)
 
     print("FINISHED")
+
+
+if __name__ == "__main__":
+    main()
