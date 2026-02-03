@@ -240,6 +240,10 @@ def check_c(args: argparse.Namespace) -> None:
     """confirms user intends to compress their files"""
     # if user added "-c" flag to compress concatenated files
     if args.c:
+        # skip confirmation if -y flag is set
+        if args.y:
+            logger.info("Compression confirmed via -y flag")
+            return
         while True:
             # ask user to confirm
             answer = input(
@@ -260,6 +264,10 @@ def check_d(args: argparse.Namespace) -> None:
     """confirms user intends to delete leftover files"""
     # if user added "-d" flag to delete old files
     if args.d:
+        # skip confirmation if -y flag is set
+        if args.y:
+            logger.info("Deletion confirmed via -y flag")
+            return
         while True:
             # ask user to confirm
             answer = input(
@@ -277,8 +285,12 @@ def check_d(args: argparse.Namespace) -> None:
                 logger.warning("Invalid response. Please type y or n")
 
 
-def check_f(folder: str) -> None:
+def check_f(folder: str, args: argparse.Namespace) -> None:
     """confirms user intends to execute main on specified folder"""
+    # skip confirmation if -y flag is set
+    if args.y:
+        logger.info("Folder execution confirmed via -y flag: %s", folder)
+        return
     while True:
         # asks user to confirm the current working directory is correct
         answer = input(f"Do you want to proceed in folder -- {folder}? (y/n) ")
@@ -326,6 +338,8 @@ def main() -> None:
                         help='Run script in specified directory')
     parser.add_argument(
         '-j', '-json', help='Run compression with preset from given JSON file')
+    parser.add_argument(
+        '-y', '-yes', help='Skip all confirmation prompts', action='store_true')
     args = parser.parse_args()
 
     # if user added "-f" flag to indicate which directory to run program in
@@ -354,7 +368,7 @@ def main() -> None:
         check_c(args)
 
     # asks user to confirm current working directory is correct
-    check_f(folder)
+    check_f(folder, args)
 
     # fills "directory_list" with all directories to run ffmpeg in
     directory_list = dir_no_subs(base_dir)
