@@ -1,10 +1,10 @@
 """System module"""
 import shutil
 import argparse
-import os
 import platform
 import subprocess
 import logging
+from pathlib import Path
 from natsort import natsorted
 
 # Configure logging
@@ -26,7 +26,7 @@ def run_command(cmd_list: list[str], error_message: str) -> None:
         raise RuntimeError(error_message)
 
 
-def get_video_duration(file_path: str) -> float:
+def get_video_duration(file_path: Path) -> float:
     """Get video duration in seconds using ffprobe"""
     try:
         result = subprocess.run(
@@ -46,11 +46,11 @@ def get_video_duration(file_path: str) -> float:
         raise RuntimeError(f"Failed to parse duration for {file_path}: {e}")
 
 
-def verify_output_file(file_path: str, operation: str) -> None:
+def verify_output_file(file_path: Path, operation: str) -> None:
     """Verify that output file exists and has content"""
-    if not os.path.exists(file_path):
+    if not file_path.exists():
         raise RuntimeError(f"{operation} failed: output file {file_path} does not exist")
-    if os.path.getsize(file_path) == 0:
+    if file_path.stat().st_size == 0:
         raise RuntimeError(f"{operation} failed: output file {file_path} is empty")
 
 
@@ -68,22 +68,24 @@ def verify_duration_match(input_duration: float, output_duration: float, operati
     logger.info("Duration verification passed")
 
 
-def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
+def ffmpeg_concat(root: Path, r_dir: Path, args: argparse.Namespace) -> None:
     """finds and combines all MP4 files in folder"""
-    
+
     # Use absolute paths to avoid directory changes
     current_path = r_dir
-    title = os.path.basename(r_dir)
-    
+    title = r_dir.name
+
     # initialize empty list to store files that will be concatenated
     filelist = []
 
     # loop through each file in current directory
-    for filename in os.listdir(current_path):
-        # Checks that file ends with ".mp4" (case insensitive) and is smaller than size limit
-        if filename.lower().endswith(".mp4") and os.path.getsize(os.path.join(current_path, filename)) < DEFAULT_SIZE_LIMIT:
-            # adds filename to "filelist" if conditions are met
-            filelist.append(filename)
+    for file_path in current_path.iterdir():
+        if file_path.is_file():
+            filename = file_path.name
+            # Checks that file ends with ".mp4" (case insensitive) and is smaller than size limit
+            if filename.lower().endswith(".mp4") and file_path.stat().st_size < DEFAULT_SIZE_LIMIT:
+                # adds filename to "filelist" if conditions are met
+                filelist.append(filename)
 
     # sorts "filelist" using "natural sorting"
     filelist = natsorted(filelist)
@@ -99,46 +101,47 @@ def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
     # build ffmpeg file list entries
     files_txt_entries = []
     for file in filelist:
+        file_path = current_path / file
         # Calculate size of all files in list
-        folder_size += os.path.getsize(os.path.join(current_path, file))
+        folder_size += file_path.stat().st_size
         # build file entry formatted for ffmpeg
         files_txt_entries.append(f"file '{file}'\n")
 
     # write all entries to files.txt in one operation
-    files_txt_path = os.path.join(current_path, "files.txt")
+    files_txt_path = current_path / "files.txt"
     with open(files_txt_path, "w", encoding="utf8") as f:
         f.writelines(files_txt_entries)
 
     # run ffmpeg command that concatenates all files into one bigger file
-    output_file = os.path.join(current_path, f"{title}.mp4")
+    output_file = current_path / f"{title}.mp4"
     run_command([
         "ffmpeg", "-f", "concat", "-safe", "0",
-        "-i", files_txt_path,
+        "-i", str(files_txt_path),
         "-c", "copy",
-        output_file
+        str(output_file)
     ], "FFmpeg concatenation failed")
-    
+
     try:
         # === VERIFICATION: Check output file exists and has content ===
         verify_output_file(output_file, "Concatenation")
-        
+
         # === VERIFICATION: Verify video duration matches sum of inputs ===
         total_input_duration = 0.0
         for file in filelist:
-            file_path = os.path.join(current_path, file)
+            file_path = current_path / file
             duration = get_video_duration(file_path)
             total_input_duration += duration
             logger.debug("Input file %s duration: %.3f seconds", file, duration)
-        
+
         output_duration = get_video_duration(output_file)
         verify_duration_match(total_input_duration, output_duration, "Concatenation")
     finally:
         # remove uneeded "files.txt" file after verification (even if it failed)
-        os.remove(files_txt_path)
-    
+        files_txt_path.unlink()
+
     # calculate size of the newly concatenated file
-    concat_file = os.path.getsize(output_file)
-    
+    concat_file = output_file.stat().st_size
+
     # log size of all smaller files and the concatenated file
     logger.info("Folder size: %d bytes", folder_size)
     logger.info("Concat size: %d bytes", concat_file)
@@ -146,29 +149,29 @@ def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
     # if user did not add "-d" flag to save old files
     if not args.d:
         # create folder where old files from current directory will be moved to
-        split_files_dir = os.path.join(current_path, f"{title} split files")
-        os.makedirs(split_files_dir, exist_ok=True)
-        
+        split_files_dir = current_path / f"{title} split files"
+        split_files_dir.mkdir(parents=True, exist_ok=True)
+
         # move each file to folder for old files
         for file in filelist:
-            source = os.path.join(current_path, file)
-            destination = os.path.join(split_files_dir, file)
-            shutil.move(source, destination)
-            
+            source = current_path / file
+            destination = split_files_dir / file
+            shutil.move(str(source), str(destination))
+
         # move current folder for old files to main folder for old files
-        files_to_delete_path = os.path.join(root, "files to delete")
-        os.makedirs(files_to_delete_path, exist_ok=True)
-        split_destination = os.path.join(files_to_delete_path, f"{title} split files")
-        shutil.move(split_files_dir, split_destination)
+        files_to_delete_path = root / "files to delete"
+        files_to_delete_path.mkdir(parents=True, exist_ok=True)
+        split_destination = files_to_delete_path / f"{title} split files"
+        shutil.move(str(split_files_dir), str(split_destination))
 
     # if user added "-c" flag to compress the concatenated file
     if args.c:
         # Build HandBrakeCLI command dynamically
-        input_file = os.path.join(current_path, f"{title}.mp4")
-        output_file = os.path.join(current_path, f"{title}(cp).mp4")
-        
-        cmd = ["HandBrakeCLI", "-i", input_file, "-o", output_file]
-        
+        input_file = current_path / f"{title}.mp4"
+        output_file = current_path / f"{title}(cp).mp4"
+
+        cmd = ["HandBrakeCLI", "-i", str(input_file), "-o", str(output_file)]
+
         # if user added "-j" flag to use customized json file for handbrake
         if args.j:
             cmd.extend(["--preset-import-file", args.j])
@@ -179,18 +182,18 @@ def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
                 "-r", "same as source",
                 "--encoder-level", "auto"
             ])
-            
+
             # if running on MacOS, use VideoToolBox which is more efficient
             if platform.system() == "Darwin":
                 cmd.extend(["-e", "vt_h265", "-q", "30"])
             else:
                 cmd.extend(["-e", "h265", "-q", "22"])
-        
+
         run_command(cmd, "HandBrake compression failed")
-        
+
         # === VERIFICATION: Check compressed file exists and has content ===
         verify_output_file(output_file, "Compression")
-        
+
         # === VERIFICATION: Verify compressed file duration matches input ===
         input_duration = get_video_duration(input_file)
         output_duration = get_video_duration(output_file)
@@ -200,40 +203,37 @@ def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
     if args.d:
         # loop through each file in sorted filelist and delete file
         for file in filelist:
-            os.remove(os.path.join(current_path, file))
+            (current_path / file).unlink()
         # if user added "-c" flag to compress concatenated files
         if args.c:
             # remove non-compressed file and rename compressed file
-            new = os.path.join(current_path, f"{title}.mp4")
-            old = os.path.join(current_path, f"{title}(cp).mp4")
-            os.remove(new)
-            os.rename(old, new)
+            new = current_path / f"{title}.mp4"
+            old = current_path / f"{title}(cp).mp4"
+            new.unlink()
+            old.rename(new)
 
 
-def dir_no_subs(directory_path: str) -> list[str]:
+def dir_no_subs(directory_path: Path) -> list[Path]:
     """finds all directories with no subdirectories and returns their
-    absolute paths as a list using iterative os.walk()"""
+    absolute paths as a list using pathlib"""
 
+    all_directories = {directory_path}
     has_subdirectories = set()
-    all_directories = []
-    nsub_list = []
 
-    # Walk through all directories iteratively
-    for dirpath, dirnames, _ in os.walk(directory_path):
-        all_directories.append(dirpath)
-        if dirnames:
-            has_subdirectories.add(dirpath)
+    # Walk directories efficiently - only find directories, not files
+    for path in directory_path.rglob('*/'):
+        all_directories.add(path)
+        # Every directory found means its parent has a subdirectory
+        has_subdirectories.add(path.parent)
 
     # Find leaf directories (those with no subdirectories)
-    for dirpath in all_directories:
-        if dirpath not in has_subdirectories:
-            nsub_list.append(dirpath)
+    nsub_list = list(all_directories - has_subdirectories)
 
-    # If no leaf directories found, add the root directory
+    # If no leaf directories found, return the root
     if not nsub_list:
-        nsub_list.append(directory_path)
+        return [directory_path]
 
-    return nsub_list
+    return sorted(nsub_list, key=str)
 
 
 def check_c(args: argparse.Namespace) -> None:
@@ -343,10 +343,10 @@ def main() -> None:
     args = parser.parse_args()
 
     # Determine target directory (either specified via -f or current directory)
-    base_dir = os.path.abspath(args.f) if args.f else os.getcwd()
-    
+    base_dir = Path(args.f).resolve() if args.f else Path.cwd()
+
     # sets "folder" as base path of current working directory
-    folder = os.path.basename(base_dir)
+    folder = base_dir.name
 
     # Validate that required tools are installed
     validate_tools(args)
@@ -371,7 +371,7 @@ def main() -> None:
     # if user did not add "-d" flag to delete old files
     if not args.d:
         # creates directory to store old files
-        os.makedirs(os.path.join(base_dir, "files to delete"), exist_ok=True)
+        (base_dir / "files to delete").mkdir(parents=True, exist_ok=True)
 
     # loops through each folder in "directory_list"
     for directory in directory_list:
