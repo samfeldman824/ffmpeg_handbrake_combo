@@ -1,14 +1,16 @@
 """
-End-to-End (E2E) Test Suite for FFmpeg/HandBrake Video Processing Tool
+End-to-End (E2E) and Integration Test Suite for FFmpeg/HandBrake Video Processing Tool
 
-This test suite provides comprehensive E2E testing covering:
+This test suite provides comprehensive E2E and integration testing covering:
 - Full CLI workflows via subprocess (true black-box testing)
-- Integration tests calling main() directly
+- Integration tests calling main() directly with real video files
 - All flag combinations (-d, -c, -j, -y)
-- Tool validation
-- Error scenarios
+- Edge cases and error scenarios
 - Video duration verification
 - File operations verification
+- Performance tests
+
+For unit tests (isolated function testing), see test_main.py
 """
 
 import os
@@ -32,10 +34,6 @@ warnings.filterwarnings("ignore", message="OpenCV: AVF: waiting to write video d
 from main import (
     dir_no_subs,
     ffmpeg_concat,
-    check_c,
-    check_d,
-    check_f,
-    validate_tools,
     main,
     get_video_duration,
     verify_output_file,
@@ -365,62 +363,6 @@ class TestIntegrationE2E:
         except Exception as e:
             # It's okay if it fails gracefully
             pass
-
-
-# =============================================================================
-# Tool Validation Tests
-# =============================================================================
-
-class TestToolValidation:
-    """Tests for tool validation and error handling"""
-    
-    def test_validate_tools_success(self, mock_args):
-        """Test tool validation when tools are present"""
-        args = mock_args()
-        # Should not raise if ffmpeg/ffprobe are installed
-        try:
-            validate_tools(args)
-        except RuntimeError as e:
-            if "ffmpeg" in str(e).lower() or "ffprobe" in str(e).lower():
-                pytest.skip("ffmpeg/ffprobe not installed")
-            raise
-    
-# =============================================================================
-# Confirmation Prompt Tests
-# =============================================================================
-
-class TestConfirmationPrompts:
-    """Tests for user confirmation prompts with -y flag"""
-    
-    def test_check_c_skips_with_yes_flag(self, mock_args, caplog):
-        """Test check_c skips prompt when -y flag is set"""
-        args = mock_args(c=True, y=True)
-        
-        # Should not raise or prompt
-        check_c(args)
-        
-        # Verify it logged the skip
-        assert "confirmed via -y flag" in caplog.text.lower()
-    
-    def test_check_d_skips_with_yes_flag(self, mock_args, caplog):
-        """Test check_d skips prompt when -y flag is set"""
-        args = mock_args(d=True, y=True)
-        
-        # Should not raise or prompt
-        check_d(args)
-        
-        # Verify it logged the skip
-        assert "confirmed via -y flag" in caplog.text.lower()
-    
-    def test_check_f_skips_with_yes_flag(self, mock_args, caplog):
-        """Test check_f skips prompt when -y flag is set"""
-        args = mock_args(y=True)
-        
-        # Should not raise or prompt
-        check_f("test_folder", args)
-        
-        # Verify it logged the skip
-        assert "confirmed via -y flag" in caplog.text.lower()
 
 
 # =============================================================================
