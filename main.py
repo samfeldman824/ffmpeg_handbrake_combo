@@ -221,10 +221,12 @@ def dir_no_subs(directory_path: Path) -> list[Path]:
     has_subdirectories = set()
 
     # Walk directories efficiently - only find directories, not files
-    for path in directory_path.rglob('*/'):
-        all_directories.add(path)
-        # Every directory found means its parent has a subdirectory
-        has_subdirectories.add(path.parent)
+    # Note: rglob('*/') may match files on some Python versions, so we filter explicitly
+    for path in directory_path.rglob('*'):
+        if path.is_dir():
+            all_directories.add(path)
+            # Every directory found means its parent has a subdirectory
+            has_subdirectories.add(path.parent)
 
     # Find leaf directories (those with no subdirectories)
     nsub_list = list(all_directories - has_subdirectories)
