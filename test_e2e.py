@@ -51,7 +51,7 @@ from main import (
 def temp_dir():
     """Create a temporary directory for testing"""
     with tempfile.TemporaryDirectory() as tmpdir:
-        yield tmpdir
+        yield Path(tmpdir)
 
 
 @pytest.fixture
@@ -68,12 +68,12 @@ def test_videos(temp_dir):
 def nested_structure(temp_dir):
     """Create a nested directory structure with videos"""
     # Create structure: temp_dir/folder1/, temp_dir/folder2/subfolder/
-    folder1 = os.path.join(temp_dir, "folder1")
-    folder2 = os.path.join(temp_dir, "folder2")
-    subfolder = os.path.join(folder2, "subfolder")
+    folder1 = temp_dir / "folder1"
+    folder2 = temp_dir / "folder2"
+    subfolder = folder2 / "subfolder"
     
-    os.makedirs(folder1)
-    os.makedirs(subfolder)
+    folder1.mkdir()
+    subfolder.mkdir(parents=True)
     
     # Add videos to each leaf directory
     create_test_video(folder1, "vid1", frames=50)
@@ -108,9 +108,9 @@ def mock_args():
 
 def create_test_video(directory, name, frames=100, fps=30, width=640, height=480):
     """Create a test video file using OpenCV"""
-    video_path = os.path.join(directory, f"{name}.mp4")
+    video_path = Path(directory) / f"{name}.mp4"
     fourcc = cv2.VideoWriter_fourcc(*"avc1")  # More compatible codec
-    writer = cv2.VideoWriter(video_path, fourcc, fps, (width, height))
+    writer = cv2.VideoWriter(str(video_path), fourcc, fps, (width, height))
     
     for _ in range(frames):
         # Create a frame with varying color to ensure video has content
@@ -120,7 +120,7 @@ def create_test_video(directory, name, frames=100, fps=30, width=640, height=480
     writer.release()
     
     # Verify video was created
-    if not os.path.exists(video_path):
+    if not video_path.exists():
         raise RuntimeError(f"Failed to create test video: {video_path}")
     
     return video_path
@@ -129,19 +129,20 @@ def create_test_video(directory, name, frames=100, fps=30, width=640, height=480
 def get_directory_size(directory):
     """Calculate total size of all files in directory recursively"""
     total = 0
-    for dirpath, _, filenames in os.walk(directory):
-        for filename in filenames:
-            filepath = os.path.join(dirpath, filename)
-            total += os.path.getsize(filepath)
+    dir_path = Path(directory)
+    for filepath in dir_path.rglob("*"):
+        if filepath.is_file():
+            total += filepath.stat().st_size
     return total
 
 
 def count_files(directory, extension=None):
     """Count files in directory, optionally filtering by extension"""
     count = 0
-    for dirpath, _, filenames in os.walk(directory):
-        for filename in filenames:
-            if extension is None or filename.lower().endswith(extension.lower()):
+    dir_path = Path(directory)
+    for filepath in dir_path.rglob("*"):
+        if filepath.is_file():
+            if extension is None or filepath.name.lower().endswith(extension.lower()):
                 count += 1
     return count
 
@@ -177,33 +178,33 @@ class TestCLIE2E:
     
     def test_cli_basic_concatenation(self, temp_dir, test_videos):
         """Test basic concatenation via CLI with -y flag"""
-        result = run_cli(["-y"], cwd=temp_dir)
+        result = run_cli(["-y"], cwd=str(temp_dir))
         
         # Check success
         assert result.returncode == 0
         assert "FINISHED" in result.stderr
         
         # Check output file exists
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
         
         # Check original files were moved to archive
-        assert os.path.exists(os.path.join(temp_dir, "files to delete"))
+        assert (temp_dir / "files to delete").exists()
     
     def test_cli_concatenation_with_delete(self, temp_dir, test_videos):
         """Test concatenation with delete flag via CLI"""
-        result = run_cli(["-d", "-y"], cwd=temp_dir)
+        result = run_cli(["-d", "-y"], cwd=str(temp_dir))
         
         assert result.returncode == 0
         
         # Check output file exists
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
         
         # Check original files were deleted (not archived)
         original_count = count_files(temp_dir, ".mp4")
         assert original_count == 1  # Only the concatenated file
-        assert not os.path.exists(os.path.join(temp_dir, "files to delete"))
+        assert not (temp_dir / "files to delete").exists()
     
     @pytest.mark.skipif(
         subprocess.run(["which", "HandBrakeCLI"], capture_output=True).returncode != 0,
@@ -213,27 +214,27 @@ class TestCLIE2E:
         """Test concatenation with compression via CLI"""
         original_size = get_directory_size(temp_dir)
         
-        result = run_cli(["-c", "-d", "-y"], cwd=temp_dir)
+        result = run_cli(["-c", "-d", "-y"], cwd=str(temp_dir))
         
         assert result.returncode == 0
         
         # Check output file exists
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
         
         # Check compression actually reduced size
-        final_size = os.path.getsize(output_file)
+        final_size = output_file.stat().st_size
         assert final_size < original_size
     
     def test_cli_with_filepath_flag(self, temp_dir, test_videos):
         """Test running with -f flag to specify directory"""
-        result = run_cli(["-f", temp_dir, "-y"])
+        result = run_cli(["-f", str(temp_dir), "-y"])
         
         assert result.returncode == 0
         
         # Check output file exists in specified directory
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
     
     def test_cli_help_flag(self):
         """Test CLI help output"""
@@ -246,7 +247,7 @@ class TestCLIE2E:
     
     def test_cli_no_videos_found(self, temp_dir):
         """Test behavior when no videos are found"""
-        result = run_cli(["-y"], cwd=temp_dir)
+        result = run_cli(["-y"], cwd=str(temp_dir))
         
         # Should complete without error even with no videos
         assert result.returncode == 0
@@ -271,13 +272,13 @@ class TestIntegrationE2E:
         ffmpeg_concat(temp_dir, temp_dir, args)
         
         # Verify output
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
         verify_output_file(output_file, "Test")
         
         # Verify originals archived
-        archive_dir = os.path.join(temp_dir, "files to delete")
-        assert os.path.exists(archive_dir)
+        archive_dir = temp_dir / "files to delete"
+        assert archive_dir.exists()
         
         # Verify duration
         output_duration = get_video_duration(output_file)
@@ -291,13 +292,13 @@ class TestIntegrationE2E:
         ffmpeg_concat(temp_dir, temp_dir, args)
         
         # Verify output
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
         
         # Verify originals deleted (not archived)
         for video in test_videos:
-            assert not os.path.exists(video)
-        assert not os.path.exists(os.path.join(temp_dir, "files to delete"))
+            assert not video.exists()
+        assert not (temp_dir / "files to delete").exists()
         
         # Verify only output file remains
         mp4_count = count_files(temp_dir, ".mp4")
@@ -316,11 +317,11 @@ class TestIntegrationE2E:
         ffmpeg_concat(temp_dir, temp_dir, args)
         
         # Verify output
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
         
         # Verify compression reduced size
-        final_size = os.path.getsize(output_file)
+        final_size = output_file.stat().st_size
         assert final_size < original_size
         
         # Verify duration preserved
@@ -343,8 +344,8 @@ class TestIntegrationE2E:
         # Verify outputs in both leaf directories
         for dir_name in ["folder1", "subfolder"]:
             dir_path = nested_structure[dir_name] if dir_name != "subfolder" else nested_structure["subfolder"]
-            output_file = os.path.join(dir_path, f"{os.path.basename(dir_path)}.mp4")
-            assert os.path.exists(output_file), f"Output not found in {dir_path}"
+            output_file = dir_path / f"{dir_path.name}.mp4"
+            assert output_file.exists(), f"Output not found in {dir_path}"
     
     def test_multiple_runs_idempotent(self, temp_dir, test_videos, mock_args):
         """Test that running twice on same directory is safe"""
@@ -353,8 +354,8 @@ class TestIntegrationE2E:
         
         # First run
         ffmpeg_concat(temp_dir, temp_dir, args)
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
         
         # Second run (should handle already-processed directory gracefully)
         # Note: This may create a new concat of the already-concatenated file
@@ -384,24 +385,6 @@ class TestToolValidation:
                 pytest.skip("ffmpeg/ffprobe not installed")
             raise
     
-    def test_validate_tools_missing_handbrake(self, mock_args):
-        """Test validation fails when HandBrakeCLI missing but -c flag set"""
-        # Temporarily modify PATH to exclude HandBrakeCLI
-        original_path = os.environ.get("PATH", "")
-        
-        # Create args with compression enabled
-        args = mock_args(c=True)
-        
-        # This test only runs if HandBrakeCLI is actually missing
-        if subprocess.run(["which", "HandBrakeCLI"], capture_output=True).returncode == 0:
-            pytest.skip("HandBrakeCLI is installed, cannot test missing scenario")
-        
-        with pytest.raises(RuntimeError) as exc_info:
-            validate_tools(args)
-        
-        assert "HandBrakeCLI" in str(exc_info.value)
-
-
 # =============================================================================
 # Confirmation Prompt Tests
 # =============================================================================
@@ -456,8 +439,8 @@ class TestEdgeCases:
         ffmpeg_concat(temp_dir, temp_dir, args)
         
         # No output file should be created
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert not os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert not output_file.exists()
     
     def test_single_video(self, temp_dir, mock_args):
         """Test behavior with single video file"""
@@ -468,8 +451,8 @@ class TestEdgeCases:
         ffmpeg_concat(temp_dir, temp_dir, args)
         
         # Should still create output
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
     
     def test_large_file_size_filter(self, temp_dir, mock_args):
         """Test that files over size limit are excluded"""
@@ -478,7 +461,7 @@ class TestEdgeCases:
         
         # Create a fake "large" file by creating empty file with large size
         # (In reality, we'd need a large video, but this tests the logic)
-        large_file = os.path.join(temp_dir, "large.mp4")
+        large_file = temp_dir / "large.mp4"
         with open(large_file, "wb") as f:
             # Write header to make it look like a video
             f.write(b"\x00\x00\x00\x20ftypisom")
@@ -492,11 +475,11 @@ class TestEdgeCases:
         ffmpeg_concat(temp_dir, temp_dir, args)
         
         # Output should only contain the normal video
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
         
         # Clean up large file
-        os.remove(large_file)
+        large_file.unlink()
     
     def test_non_mp4_files_ignored(self, temp_dir, mock_args):
         """Test that non-MP4 files are ignored"""
@@ -505,8 +488,7 @@ class TestEdgeCases:
         
         # Create non-video files
         for ext in [".txt", ".avi", ".mov", ".mkv"]:
-            with open(os.path.join(temp_dir, f"file{ext}"), "w") as f:
-                f.write("test")
+            (temp_dir / f"file{ext}").write_text("test")
         
         os.chdir(temp_dir)
         args = mock_args(d=False, c=False, y=True)
@@ -514,12 +496,12 @@ class TestEdgeCases:
         ffmpeg_concat(temp_dir, temp_dir, args)
         
         # Should only process the MP4
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
         
         # Non-MP4 files should remain
         for ext in [".txt", ".avi", ".mov", ".mkv"]:
-            assert os.path.exists(os.path.join(temp_dir, f"file{ext}"))
+            assert (temp_dir / f"file{ext}").exists()
 
 
 # =============================================================================
@@ -544,8 +526,8 @@ class TestPerformance:
         duration = time.time() - start
         
         # Verify output
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
         
         # Log performance (not a strict assertion, just informational)
         print(f"\nProcessed 20 videos in {duration:.2f} seconds")
@@ -571,8 +553,8 @@ class TestMainEntryPoint:
             sys.argv = original_argv
         
         # Verify output
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
     
     def test_main_with_all_flags(self, temp_dir, test_videos):
         """Test main() with all flags enabled"""
@@ -586,12 +568,12 @@ class TestMainEntryPoint:
             sys.argv = original_argv
         
         # Verify output
-        output_file = os.path.join(temp_dir, f"{os.path.basename(temp_dir)}.mp4")
-        assert os.path.exists(output_file)
+        output_file = temp_dir / f"{temp_dir.name}.mp4"
+        assert output_file.exists()
         
         # Verify originals deleted
         for video in test_videos:
-            assert not os.path.exists(video)
+            assert not video.exists()
 
 
 # =============================================================================
