@@ -342,13 +342,8 @@ def main() -> None:
         '-y', '-yes', help='Skip all confirmation prompts', action='store_true')
     args = parser.parse_args()
 
-    # if user added "-f" flag to indicate which directory to run program in
-    if args.f:
-        # changes current working directory to given filepath
-        os.chdir(args.f)
-        
-    # sets "base_dir" as the absolute path of current working directory
-    base_dir = os.getcwd()
+    # Determine target directory (either specified via -f or current directory)
+    base_dir = os.path.abspath(args.f) if args.f else os.getcwd()
     
     # sets "folder" as base path of current working directory
     folder = os.path.basename(base_dir)
