@@ -19,7 +19,12 @@ logger = logging.getLogger(__name__)
 DEFAULT_SIZE_LIMIT = 4200000000
 
 def run_command(cmd_list: list[str], error_message: str) -> None:
-    """Helper function to run subprocess commands with error handling"""
+    """Helper function to run subprocess commands with error handling
+    
+    Args:
+        cmd_list: List of command arguments to execute
+        error_message: Error message to raise if command fails
+    """
     try:
         subprocess.run(cmd_list, check=True)
     except subprocess.CalledProcessError:
@@ -27,7 +32,14 @@ def run_command(cmd_list: list[str], error_message: str) -> None:
 
 
 def get_video_duration(file_path: Path) -> float:
-    """Get video duration in seconds using ffprobe"""
+    """Get video duration in seconds using ffprobe
+    
+    Args:
+        file_path: Path to the video file
+        
+    Returns:
+        Duration in seconds as a float
+    """
     try:
         result = subprocess.run(
             [
@@ -47,7 +59,12 @@ def get_video_duration(file_path: Path) -> float:
 
 
 def verify_output_file(file_path: Path, operation: str) -> None:
-    """Verify that output file exists and has content"""
+    """Verify that output file exists and has content
+    
+    Args:
+        file_path: Path to the output file to verify
+        operation: Name of the operation that created the file (for error messages)
+    """
     if not file_path.exists():
         raise RuntimeError(f"{operation} failed: output file {file_path} does not exist")
     if file_path.stat().st_size == 0:
@@ -55,7 +72,14 @@ def verify_output_file(file_path: Path, operation: str) -> None:
 
 
 def verify_duration_match(input_duration: float, output_duration: float, operation: str, tolerance: float = 1.0) -> None:
-    """Verify that output duration matches input duration within tolerance"""
+    """Verify that output duration matches input duration within tolerance
+    
+    Args:
+        input_duration: Expected duration in seconds
+        output_duration: Actual duration in seconds
+        operation: Name of the operation being verified (for error messages)
+        tolerance: Maximum acceptable difference in seconds (default: 1.0)
+    """
     logger.info("Input duration: %.3f seconds", input_duration)
     logger.info("Output duration: %.3f seconds", output_duration)
     
@@ -69,7 +93,13 @@ def verify_duration_match(input_duration: float, output_duration: float, operati
 
 
 def ffmpeg_concat(root: Path, r_dir: Path, args: argparse.Namespace) -> None:
-    """finds and combines all MP4 files in folder"""
+    """finds and combines all MP4 files in folder
+    
+    Args:
+        root: Root directory path for organizing output files
+        r_dir: Directory containing MP4 files to concatenate
+        args: Command line arguments namespace containing flags (d, c, j, y)
+    """
 
     # Use absolute paths to avoid directory changes
     current_path = r_dir
@@ -215,7 +245,14 @@ def ffmpeg_concat(root: Path, r_dir: Path, args: argparse.Namespace) -> None:
 
 def dir_no_subs(directory_path: Path) -> list[Path]:
     """finds all directories with no subdirectories and returns their
-    absolute paths as a list using pathlib"""
+    absolute paths as a list using pathlib
+    
+    Args:
+        directory_path: Root directory to search for leaf directories
+        
+    Returns:
+        List of Path objects representing directories with no subdirectories
+    """
 
     all_directories = {directory_path}
     has_subdirectories = set()
@@ -239,7 +276,11 @@ def dir_no_subs(directory_path: Path) -> list[Path]:
 
 
 def check_c(args: argparse.Namespace) -> None:
-    """confirms user intends to compress their files"""
+    """confirms user intends to compress their files
+    
+    Args:
+        args: Command line arguments namespace containing c and y flags
+    """
     # if user added "-c" flag to compress concatenated files
     if args.c:
         # skip confirmation if -y flag is set
@@ -263,7 +304,11 @@ def check_c(args: argparse.Namespace) -> None:
                 logger.warning("Invalid response. Please type y or n")
 
 def check_d(args: argparse.Namespace) -> None:
-    """confirms user intends to delete leftover files"""
+    """confirms user intends to delete leftover files
+    
+    Args:
+        args: Command line arguments namespace containing d and y flags
+    """
     # if user added "-d" flag to delete old files
     if args.d:
         # skip confirmation if -y flag is set
@@ -288,7 +333,12 @@ def check_d(args: argparse.Namespace) -> None:
 
 
 def check_f(folder: str, args: argparse.Namespace) -> None:
-    """confirms user intends to execute main on specified folder"""
+    """confirms user intends to execute main on specified folder
+    
+    Args:
+        folder: Name of the folder to process
+        args: Command line arguments namespace containing y flag
+    """
     # skip confirmation if -y flag is set
     if args.y:
         logger.info("Folder execution confirmed via -y flag: %s", folder)
@@ -311,7 +361,11 @@ def check_f(folder: str, args: argparse.Namespace) -> None:
 
 
 def validate_tools(args: argparse.Namespace) -> None:
-    """Check that required tools (ffmpeg, ffprobe, and HandBrakeCLI) are installed"""
+    """Check that required tools (ffmpeg, ffprobe, and HandBrakeCLI) are installed
+    
+    Args:
+        args: Command line arguments namespace containing c flag to determine if HandBrakeCLI is needed
+    """
     # Check for ffmpeg (always required)
     if shutil.which("ffmpeg") is None:
         raise RuntimeError("ffmpeg is not installed or not in PATH. Please install ffmpeg.")
