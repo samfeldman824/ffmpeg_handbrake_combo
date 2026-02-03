@@ -26,6 +26,48 @@ def run_command(cmd_list: list[str], error_message: str) -> None:
         raise RuntimeError(error_message)
 
 
+def get_video_duration(file_path: str) -> float:
+    """Get video duration in seconds using ffprobe"""
+    try:
+        result = subprocess.run(
+            [
+                "ffprobe", "-v", "error", "-show_entries", "format=duration",
+                "-of", "default=noprint_wrappers=1:nokey=1", file_path
+            ],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return float(result.stdout.strip())
+    except subprocess.CalledProcessError as e:
+        stderr_msg = e.stderr.strip() if e.stderr else "No error output"
+        raise RuntimeError(f"Failed to get duration for {file_path}: {stderr_msg}")
+    except ValueError as e:
+        raise RuntimeError(f"Failed to parse duration for {file_path}: {e}")
+
+
+def verify_output_file(file_path: str, operation: str) -> None:
+    """Verify that output file exists and has content"""
+    if not os.path.exists(file_path):
+        raise RuntimeError(f"{operation} failed: output file {file_path} does not exist")
+    if os.path.getsize(file_path) == 0:
+        raise RuntimeError(f"{operation} failed: output file {file_path} is empty")
+
+
+def verify_duration_match(input_duration: float, output_duration: float, operation: str, tolerance: float = 1.0) -> None:
+    """Verify that output duration matches input duration within tolerance"""
+    logger.info("Input duration: %.3f seconds", input_duration)
+    logger.info("Output duration: %.3f seconds", output_duration)
+    
+    if abs(output_duration - input_duration) > tolerance:
+        raise RuntimeError(
+            f"{operation} verification failed: output duration ({output_duration:.3f}s) "
+            f"does not match input duration ({input_duration:.3f}s)"
+        )
+    
+    logger.info("Duration verification passed")
+
+
 def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
     """finds and combines all MP4 files in folder"""
     
@@ -46,6 +88,11 @@ def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
     # sorts "filelist" using "natural sorting"
     filelist = natsorted(filelist)
 
+    # Check if any MP4 files were found
+    if not filelist:
+        logger.warning("No MP4 files found in %s, skipping", current_path)
+        return
+
     # initialize combined size all files in folder starting at 0
     folder_size = 0
 
@@ -63,18 +110,34 @@ def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
         f.writelines(files_txt_entries)
 
     # run ffmpeg command that concatenates all files into one bigger file
+    output_file = os.path.join(current_path, f"{title}.mp4")
     run_command([
         "ffmpeg", "-f", "concat", "-safe", "0",
         "-i", files_txt_path,
         "-c", "copy",
-        os.path.join(current_path, f"{title}.mp4")
+        output_file
     ], "FFmpeg concatenation failed")
     
-    # remove uneeded "files.txt" file
-    os.remove(files_txt_path)
+    try:
+        # === VERIFICATION: Check output file exists and has content ===
+        verify_output_file(output_file, "Concatenation")
+        
+        # === VERIFICATION: Verify video duration matches sum of inputs ===
+        total_input_duration = 0.0
+        for file in filelist:
+            file_path = os.path.join(current_path, file)
+            duration = get_video_duration(file_path)
+            total_input_duration += duration
+            logger.debug("Input file %s duration: %.3f seconds", file, duration)
+        
+        output_duration = get_video_duration(output_file)
+        verify_duration_match(total_input_duration, output_duration, "Concatenation")
+    finally:
+        # remove uneeded "files.txt" file after verification (even if it failed)
+        os.remove(files_txt_path)
     
     # calculate size of the newly concatenated file
-    concat_file = os.path.getsize(os.path.join(current_path, f'{title}.mp4'))
+    concat_file = os.path.getsize(output_file)
     
     # log size of all smaller files and the concatenated file
     logger.info("Folder size: %d bytes", folder_size)
@@ -124,6 +187,14 @@ def ffmpeg_concat(root: str, r_dir: str, args: argparse.Namespace) -> None:
                 cmd.extend(["-e", "h265", "-q", "22"])
         
         run_command(cmd, "HandBrake compression failed")
+        
+        # === VERIFICATION: Check compressed file exists and has content ===
+        verify_output_file(output_file, "Compression")
+        
+        # === VERIFICATION: Verify compressed file duration matches input ===
+        input_duration = get_video_duration(input_file)
+        output_duration = get_video_duration(output_file)
+        verify_duration_match(input_duration, output_duration, "Compression")
 
     # if user added "-d" flag to delete old files
     if args.d:
@@ -226,10 +297,18 @@ def check_f(folder: str) -> None:
 
 
 def validate_tools(args: argparse.Namespace) -> None:
-    """Check that required tools (ffmpeg and HandBrakeCLI) are installed"""
+    """Check that required tools (ffmpeg, ffprobe, and HandBrakeCLI) are installed"""
     # Check for ffmpeg (always required)
     if shutil.which("ffmpeg") is None:
         raise RuntimeError("ffmpeg is not installed or not in PATH. Please install ffmpeg.")
+
+    # Check for ffprobe (separate binary but usually bundled with ffmpeg)
+    if shutil.which("ffprobe") is None:
+        raise RuntimeError(
+            "ffprobe is not installed or not in PATH. "
+            "ffprobe is typically included with ffmpeg. "
+            "Please ensure your ffmpeg installation includes ffprobe."
+        )
 
     # Check for HandBrakeCLI only if compression flag is set
     if args.c and shutil.which("HandBrakeCLI") is None:
