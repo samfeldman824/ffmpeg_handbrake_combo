@@ -387,19 +387,23 @@ def main() -> None:
     """Main entry point for the script"""
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-d', '-delete', help='Delete leftover files', action='store_true')
-    parser.add_argument('-c', '-compress',
+        '-d', '--delete', help='Delete leftover files', action='store_true')
+    parser.add_argument('-c', '--compress',
                         help='Compress concatenated files', action='store_true')
-    parser.add_argument('-f', '-filepath',
+    parser.add_argument('-f', '--filepath',
                         help='Run script in specified directory')
     parser.add_argument(
-        '-j', '-json', help='Run compression with preset from given JSON file')
+        '-j', '--json', help='Run compression with preset from given JSON file')
     parser.add_argument(
-        '-y', '-yes', help='Skip all confirmation prompts', action='store_true')
+        '-y', '--yes', help='Skip all confirmation prompts', action='store_true')
     args = parser.parse_args()
 
     # Determine target directory (either specified via -f or current directory)
     base_dir = Path(args.f).resolve() if args.f else Path.cwd()
+    if not base_dir.exists():
+        raise RuntimeError(f"Target directory does not exist: {base_dir}")
+    if not base_dir.is_dir():
+        raise RuntimeError(f"Target path is not a directory: {base_dir}")
 
     # sets "folder" as base path of current working directory
     folder = base_dir.name
